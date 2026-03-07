@@ -1,0 +1,41 @@
+1. Problem Tanımı (Neyi Çözüyoruz?)
+Dünya genelinde inme (felç), ölüm nedenleri arasında üst sıralarda yer almakta ve hayatta kalanlarda ciddi fiziksel kısıtlamalara yol açmaktadır. Mevcut sağlık sistemlerinde risk analizi genellikle bir semptom ortaya çıktıktan sonra yapılır.
+
+Çözmeyi amaçladığımız temel problemler:
+
+-Veri Karmaşıklığı: Yaş, BMI ve glikoz seviyesi gibi birbirinden bağımsız görünen değişkenlerin bir araya geldiğinde oluşturduğu riskin insan gözüyle analiz edilmesinin zorluğu.
+
+-Geç Teşhis: Risk faktörlerinin semptomlar oluşmadan önce fark edilememesi.
+
+-Önleyici Sağlık Eksikliği: Kişiye özel risk skorlamasının eksikliği nedeniyle yaşam tarzı değişikliklerine gidilmemesi.
+
+2. Projenin Genel Hedefleri
+Projenin ana hedefi, veriye dayalı bir erken uyarı mekanizması oluşturmaktır. Alt hedefler ise şunlardır:
+
+-Tahminleme Gücü: Mevcut veri setini kullanarak %80 ve üzeri doğruluk oranına sahip bir makine öğrenimi modeli eğitmek.
+
+-Korelasyon Analizi: Hangi faktörün (örneğin; sigara kullanımı mı yoksa yaş mı?) inme riski üzerinde daha baskın olduğunu istatistiksel olarak ortaya koymak.
+
+-Erişilebilirlik: Hazırlanan modelin ve temizlenmiş veri setinin GitHub üzerinden diğer araştırmacıların kullanımına sunulması.
+
+3. Proje Kapsamı (Neleri Yapacağız?)
+Proje, verinin ham halinden çalışan bir modele kadar olan tüm yazılım yaşam döngüsünü kapsar:
+
+-Veri Madenciliği ve Temizliği: Eksik verilerin (Missing Values) tespiti, aykırı değerlerin (Outliers) filtrelenmesi ve verinin normalize edilmesi.
+
+-Özellik Mühendisliği (Feature Engineering): Kategorik verilerin (Cinsiyet, Sigara durumu vb.) modelin anlayabileceği sayısal değerlere dönüştürülmesi.
+
+-Model Seçimi ve Eğitimi: Lojistik Regresyon, Rastgele Orman (Random Forest) veya Destek Vektör Makineleri (SVM) gibi algoritmaların performanslarının karşılaştırılması.
+
+-Dokümantasyon: Proje analiz raporu ve kodların GitHub üzerinden profesyonel bir README dosyası ile sunulması.
+
+
+Shutterstock
+4. Nihai Çıktı (Sonuçta Elimizde Ne Olacak?)
+Projenin sonunda ortaya çıkacak somut çıktılar şunlardır:
+
+1.Eğitilmiş Bir Model: Yeni girilen bir hasta verisi (Örn: 55 yaş, 140 glikoz, sigara içiyor) için % olarak risk tahmini yapan bir yazılım modülü.
+
+2.Analiz Raporu: Hangi değişkenlerin inme riskini ne kadar artırdığını gösteren grafiksel raporlar.
+
+3.Açık Kaynak Reposu: Temizlenmiş veri seti ve modelleme kodlarını içeren, yazılım mühendisliği standartlarına uygun bir GitHub projesi.
