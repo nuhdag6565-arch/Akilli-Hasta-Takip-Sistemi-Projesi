@@ -42,7 +42,7 @@ Proje, verinin ham halinden çalışan bir modele kadar olan tüm yazılım yaş
 -Dokümantasyon: Proje analiz raporu ve kodların GitHub üzerinden profesyonel bir README dosyası ile sunulması.
 
 
-Shutterstock
+
 4. Nihai Çıktı (Sonuçta Elimizde Ne Olacak?)
 Projenin sonunda ortaya çıkacak somut çıktılar şunlardır:
 
