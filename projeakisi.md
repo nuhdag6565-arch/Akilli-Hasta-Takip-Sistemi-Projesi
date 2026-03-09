@@ -39,4 +39,4 @@ Projenin sonunda ortaya çıkacak somut çıktılar şunlardır:
 * **Analiz Raporu:** Hangi değişkenlerin inme riskini ne kadar artırdığını gösteren grafiksel raporlar.
 * **Açık Kaynak Reposu:** Temizlenmiş veri seti ve modelleme kodlarını içeren, yazılım mühendisliği standartlarına uygun bir GitHub projesi.
 * ---
-* ### Teknoloji Araştırması ve Seçimi
+### Teknoloji Araştırması ve Seçimi
