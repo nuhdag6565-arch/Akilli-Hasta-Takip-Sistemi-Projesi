@@ -50,7 +50,7 @@ python database/seed_data.py
 |------|-----|
 | Nuh Dağ | Scrum Master / Veritabanı |
 | Mustafa Haccar | Proje Analizi |
-| Aslıhan İlhan | - |
+| Aslıhan İlhan | Geliştirme Ortamı Kurulumu |
 | Amr Khaled | Teknoloji Araştırması / ML |
 | Necmihan Aksu | Gereksinim Toplama |
 
