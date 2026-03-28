@@ -61,9 +61,6 @@ Projede makine öğrenimi algoritmalarını uygulamak, veriyi eğitim/test olara
 
 #### 5. Web Arayüzü ve Sunum: Streamlit
 Geliştirilen makine öğrenimi modelinin tıp profesyonelleri tarafından erişilebilir olması için **Streamlit** kütüphanesi tercih edilmiştir. Hastanın bulgularının girilebildiği, arka planda Random Forest modeline veri gönderen ve sonucu görsel bir "Risk Metresi" ile raporlayan profesyonel bir Karar Destek Paneli inşa edilmiştir.
-
-#### 6. Sonuç
-Proje kapsamında Python tabanlı, lokal ortamda çalışan, SMOTE ile veri dengesizliği giderilmiş ve Random Forest ile %94 bandında doğruluk oranına ulaşan bir makine öğrenimi sistemi geliştirilmiştir. Bu sistemin Streamlit aracılığıyla modern bir web arayüzüne entegre edilmesi, projenin kullanılabilir bir yazılım ürününe dönüşmesini sağlamıştır.
 ---
 ### 📋 Gereksinim Toplama ve Belgeleme (Sorumlu: Necmihan Aksu )
 
