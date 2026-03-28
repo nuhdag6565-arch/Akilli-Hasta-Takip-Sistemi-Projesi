@@ -61,7 +61,9 @@ Projede makine öğrenimi algoritmalarını uygulamak, veriyi eğitim/test olara
 
 #### 5. Web Arayüzü ve Sunum: Streamlit
 Geliştirilen makine öğrenimi modelinin tıp profesyonelleri tarafından erişilebilir olması için **Streamlit** kütüphanesi tercih edilmiştir. Hastanın bulgularının girilebildiği, arka planda Random Forest modeline veri gönderen ve sonucu görsel bir "Risk Metresi" ile raporlayan profesyonel bir Karar Destek Paneli inşa edilmiştir.
+
 ---
+
 ### 📋 Gereksinim Toplama ve Belgeleme (Sorumlu: Necmihan Aksu )
 
 #### 1. Gereksinim Toplama Süreci
