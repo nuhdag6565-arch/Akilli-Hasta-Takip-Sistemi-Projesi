@@ -85,7 +85,7 @@ Kullanılan değişkenler: `hasta_id`, `cinsiyet`, `yas`, `hipertansiyon`, `kalp
 
 #### 4. Teknik (Fonksiyonel Olmayan) Gereksinimler
 * **Performans:** Sistem anlık veri girişlerinde saniyeler içinde analiz sonucunu arayüze yansıtabilmelidir.
-* **Doğruluk:** Kullanılacak makine öğrenimi modeli sağlık risk tahmini için en az %80 doğruluk oranını hedeflemelidir. (Modelimiz SMOTE entegrasyonu ile %94.29 başarı oranına ulaşarak bu gereksinimi karşılamıştır).
+* **Doğruluk:** Kullanılacak makine öğrenimi modeli sağlık risk tahmini için en az %80 doğruluk oranını hedeflemelidir. 
 * **Güvenlik ve Mimari:** Mevcut sistem bir yerel prototip (MVP) olarak çalışacak olup, veri setinin ve modelin dış erişime kapalı, güvenli bir lokal sanal ortamda (`venv`) muhafaza edilmesi sağlanmalıdır.
 * **Kullanılabilirlik:** Sistem, tıp profesyonellerini yormayacak şekilde karanlık tema (Dark Mode) desteğine sahip, ergonomik ve anlaşılır bir kullanıcı arayüzüne sahip olmalıdır.
 
