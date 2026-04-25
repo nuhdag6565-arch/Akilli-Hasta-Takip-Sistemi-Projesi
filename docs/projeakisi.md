@@ -92,3 +92,31 @@ Kullanılan değişkenler: `hasta_id`, `cinsiyet`, `yas`, `hipertansiyon`, `kalp
 #### 5. Sistem Kısıtlamaları
 * Sistem analiz için sadece belirlenen CSV formatındaki özellikleri kabul edecektir.
 * Sistem geliştirme süresi proje takvimi ile sınırlıdır ve canlı bir hastane veritabanı entegrasyonu bu fazın kapsamı dışındadır.
+
+## 4. Hafta Geliştirmeleri ve Görev Dağılımı
+
+**Necmihan Aksu (Gereksinim Toplama ve Belgeleme):**
+
+Bu hafta proje gereksinimlerinin toplanması ve belgelenmesi 
+tamamlanmıştır.
+
+### Yapılan Çalışmalar:
+
+- Veri kaynağı gereksinimleri belirlendi (5110 hasta kaydı, 
+  12 sağlık değişkeni)
+- Fonksiyonel gereksinimler (FR-01 - FR-06) tanımlandı
+- Teknik gereksinimler belirlendi (%80 doğruluk hedefi, 
+  güvenlik, kullanılabilirlik)
+- Sistem kısıtlamaları dokümante edildi
+
+**Yasmin Hammuş (Dokümantasyon Sorumlusu):**
+
+- Tüm haftalık geliştirmeler incelendi
+- 4. hafta dokümantasyonu güncellendi ve projeye eklendi
+
+
+
+
+
+
+
