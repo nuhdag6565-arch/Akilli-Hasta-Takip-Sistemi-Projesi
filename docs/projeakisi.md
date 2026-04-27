@@ -93,6 +93,31 @@ Kullanılan değişkenler: `hasta_id`, `cinsiyet`, `yas`, `hipertansiyon`, `kalp
 * Sistem analiz için sadece belirlenen CSV formatındaki özellikleri kabul edecektir.
 * Sistem geliştirme süresi proje takvimi ile sınırlıdır ve canlı bir hastane veritabanı entegrasyonu bu fazın kapsamı dışındadır.
 
+---
+
+## 📅 2. Hafta: Gereksinim Analizi ve Planlama
+
+**Sorumlu:** Yasmin Hammuş (Dokümantasyon Sorumlusu)
+
+### 📋 Yapılan Çalışmalar
+* **İş Paketi Tanımlama:** Proje başlangıç ve planlama aşaması (İP-01) tamamlanarak iş paketleri detaylandırıldı.
+* **Kapsam Yönetimi:** Sistemin fonksiyonel sınırları belirlendi; HBYS standartlarına uygun veri girişi ve inme riski tahminleme süreçleri analiz edildi.
+* **Risk Analizi:** Projenin başarı ölçütleri ve olası "kapsam kayması" (scope creep) riskleri değerlendirildi.
+
+---
+
+## 📅 3. Hafta: Sistem Tasarımı ve Veri Modelleme
+
+**Sorumlu:** Yasmin Hammuş (Dokümantasyon Sorumlusu)
+
+### 🏗 Mimari ve Tasarım
+* **Sistem Mimarisi (İP-03):** Projenin teknik altyapısı ve modül etkileşimleri planlandı.
+* **Nesne Yönelimli Modelleme (OOP):** * `Kisi` üst sınıfından türetilen `Hasta` sınıf yapısı tasarlandı.
+    * Kalıtım (Inheritance) hiyerarşisi oluşturularak TC Kimlik ve iletişim bilgilerinin standartlaştırılması sağlandı.
+* **Sektörel Standartlar:** Türkiye'deki Hastane Bilgi Yönetim Sistemleri (HBYS) standartları incelenerek veri modelleri bu kriterlere göre optimize edildi.
+
+---
+
 4. Hafta Geliştirmeleri ve Görev Dağılımı
 Necmihan Aksu (Gereksinim Toplama ve Belgeleme)
 Bu hafta, projenin temelini oluşturan gereksinimlerin analizi, sınıflandırılması ve dökümantasyon süreci başarıyla tamamlanmıştır. Yapılan çalışmalar projenin teknik çerçevesini netleştirmiştir.
