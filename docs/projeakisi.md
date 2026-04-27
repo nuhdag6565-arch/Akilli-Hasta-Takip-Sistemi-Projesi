@@ -109,7 +109,7 @@ tamamlanmıştır.
   güvenlik, kullanılabilirlik)
 - Sistem kısıtlamaları dokümante edildi
 
-**Yasmin Hammuş (Dokümantasyon Sorumlusu):**
+**Yasamin Hammuş (Dokümantasyon Sorumlusu):**
 
 - Tüm haftalık geliştirmeler incelendi
 - 4. hafta dokümantasyonu güncellendi ve projeye eklendi
