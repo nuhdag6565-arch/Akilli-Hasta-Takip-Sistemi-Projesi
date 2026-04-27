@@ -118,6 +118,29 @@ Kullanılan değişkenler: `hasta_id`, `cinsiyet`, `yas`, `hipertansiyon`, `kalp
 
 ---
 
+## 🛡️ 2. ve 3. Hafta: Teknik Tasarım ve Risk Yönetimi
+**Dokümantasyon Hazırlığı:** Yasmin Hammuş  
+**İş Paketleri ve Risk Analizi:** Mustafa Haccar
+### 🏗️ Nesne Yönelimli Tasarım (OOP)
+Haftalık geliştirme sürecinde, sistemin sürdürülebilirliği için **Kalıtım (Inheritance)** yapısı kullanılmıştır. Türkiye'deki HBYS standartlarına uygun olarak tüm aktörler ortak bir `Kisi` üst sınıfından türetilmiştir.
+* **Sektörel Standartlar:** TC kimlik doğrulaması ve iletişim bilgilerinin tek formatta tutulması sağlanmıştır.
+* **Kod Uygulaması:** `Hasta` sınıfı, `Kisi` sınıfından `extends` anahtar kelimesi ile türetilerek kodun tekrar yazılması önlenmiştir.
+### 📊 Risk Analiz Tablosu
+Projenin başarısını korumak amacıyla aşağıdaki olası riskler belirlenmiştir:
+
+| Risk | Olasılık | Etki | Önlem |
+| :--- | :--- | :--- | :--- |
+| **Gereksinim Değişikliği** | Yüksek | Yüksek | Değişiklik kontrol süreci uygulanmalı. |
+| **Kaynak Yetersizliği** | Orta | Yüksek | Yedek kaynak planı hazırlanmalı. |
+| **Teknik Borç Birikimi** | Orta | Orta | Kod inceleme süreçleri sıkılaştırılmalı. |
+| **Paydaş Onay Gecikmesi** | Düşük | Orta | Erken iletişim ve onay takibi sağlanmalı. |
+
+### 📝 Sonuç ve Stratejik Öneriler
+* **Sürekli İyileştirme:** Her faz sonunda retrospektif yapılarak süreç iyileştirilecektir.
+* **Onay Mekanizması:** Çıktılar belgelenerek paydaş onayına sunulacak ve kayıt altına alınacaktır.
+* **Bağımlılık Yönetimi:** İş paketleri arasındaki bağımlılıklar göz önünde bulundurularak süreç takip edilecektir.
+---
+
 4. Hafta Geliştirmeleri ve Görev Dağılımı
 Necmihan Aksu (Gereksinim Toplama ve Belgeleme)
 Bu hafta, projenin temelini oluşturan gereksinimlerin analizi, sınıflandırılması ve dökümantasyon süreci başarıyla tamamlanmıştır. Yapılan çalışmalar projenin teknik çerçevesini netleştirmiştir.
