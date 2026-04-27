@@ -93,30 +93,19 @@ Kullanılan değişkenler: `hasta_id`, `cinsiyet`, `yas`, `hipertansiyon`, `kalp
 * Sistem analiz için sadece belirlenen CSV formatındaki özellikleri kabul edecektir.
 * Sistem geliştirme süresi proje takvimi ile sınırlıdır ve canlı bir hastane veritabanı entegrasyonu bu fazın kapsamı dışındadır.
 
-## 4. Hafta Geliştirmeleri ve Görev Dağılımı
-
-**Necmihan Aksu (Gereksinim Toplama ve Belgeleme):**
-
-Bu hafta proje gereksinimlerinin toplanması ve belgelenmesi 
-tamamlanmıştır.
-
-### Yapılan Çalışmalar:
-
-- Veri kaynağı gereksinimleri belirlendi (5110 hasta kaydı, 
-  12 sağlık değişkeni)
-- Fonksiyonel gereksinimler (FR-01 - FR-06) tanımlandı
-- Teknik gereksinimler belirlendi (%80 doğruluk hedefi, 
-  güvenlik, kullanılabilirlik)
-- Sistem kısıtlamaları dokümante edildi
-
-**Yasamin Hammuş (Dokümantasyon Sorumlusu):**
-
-- Tüm haftalık geliştirmeler incelendi
-- 4. hafta dokümantasyonu güncellendi ve projeye eklendi
+4. Hafta Geliştirmeleri ve Görev Dağılımı
+Necmihan Aksu (Gereksinim Toplama ve Belgeleme)
+Bu hafta, projenin temelini oluşturan gereksinimlerin analizi, sınıflandırılması ve dökümantasyon süreci başarıyla tamamlanmıştır. Yapılan çalışmalar projenin teknik çerçevesini netleştirmiştir.
+Gerçekleştirilen Detaylı Faaliyetler:
+Veri Kaynağı Analizi ve Gereksinimleri: Sistemde kullanılacak veri seti tanımlanmış olup, 5110 hasta kaydı üzerinde çalışma yapılmıştır. Analiz ve modelleme süreçleri için kritik öneme sahip 12 temel sağlık değişkeni belirlenmiştir.
+Fonksiyonel Gereksinimlerin Tanımlanması (FR-01 - FR-06): Sistemin gerçekleştirmesi gereken temel işlevler FR-01 ile FR-06 kodları arasında detaylandırılmış ve standartlara uygun şekilde dökümante edilmiştir.
+Teknik ve Kalite Gereksinimlerinin Belirlenmesi: Sistemin performans hedefi olarak minimum %80 doğruluk oranı belirlenmiştir. Projenin sürdürülebilirliği için güvenlik protokolleri ve kullanılabilirlik kriterleri sisteme entegre edilmiştir.
+Sistem Kısıtlamalarının Belgelenmesi: Yazılımın çalışma ortamı, donanım limitleri ve teknik kısıtlamalar belirlenerek risk yönetimi kapsamında dökümante edilmiştir.
+Yasamin Hammuş (Dökümantasyon Sorumlusu)
+Proje ilerlemesinin kayıt altına alınması ve dökümantasyonun güncel tutulması süreçlerini yönetmiştir.
+Haftalık Geliştirme Denetimi: Hafta boyunca yapılan tüm teknik geliştirmeler gözden geçirilmiş ve proje hedefleriyle tutarlılığı kontrol edilmiştir.
+4. Hafta Rapor Güncellemesi ve Entegrasyonu: Haftalık ilerleme raporu en güncel verilerle revize edilmiş ve ana proje dökümanına resmi olarak eklenmiştir.
 
 
 
-
-
-
-
+  
