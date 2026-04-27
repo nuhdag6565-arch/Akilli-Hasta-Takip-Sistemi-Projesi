@@ -106,6 +106,37 @@ Proje ilerlemesinin kayıt altına alınması ve dökümantasyonun güncel tutul
 Haftalık Geliştirme Denetimi: Hafta boyunca yapılan tüm teknik geliştirmeler gözden geçirilmiş ve proje hedefleriyle tutarlılığı kontrol edilmiştir.
 4. Hafta Rapor Güncellemesi ve Entegrasyonu: Haftalık ilerleme raporu en güncel verilerle revize edilmiş ve ana proje dökümanına resmi olarak eklenmiştir.
 
+  ## 📄 5. Hafta Geliştirmeleri: Veri Seti Dokümantasyonu
+**Sorumlu:** Yasmin Hammuş (Dokümantasyon Sorumlusu)
+### 📊 Veri Seti Özeti: `temizlenmis_hasta_verisi.csv`
+* **Dosya Konumu:** `data/processed/temizlenmis_hasta_verisi.csv`
+* **Açıklama:** Bu veri seti, inme (felç) riski tahmini modelleri geliştirmek amacıyla ön işlemeden geçirilmiş ve analiz için optimize edilmiştir.
+* **Toplam Kayıt Sayısı:** 5111 Hasta
+* **Toplam Sütun Sayısı:** 12
+---
+### 🔍 Sütun Açıklamaları (Özellik Matrisi)
+
+| Sütun Adı | Açıklama | Değer Aralığı / Kodlama |
+| :--- | :--- | :--- |
+| **hasta_id** | Hasta benzersiz kimlik numarası | Integer |
+| **cinsiyet** | Hastanın cinsiyeti | 0 = Kadın, 1 = Erkek |
+| **yas** | Hastanın yaşı | Sayısal |
+| **hipertansiyon** | Yüksek tansiyon durumu | 0 = Yok, 1 = Var |
+| **kalp_hastaligi** | Kalp hastalığı geçmişi | 0 = Yok, 1 = Var |
+| **evli_mi** | Medeni durum | 0 = Hayır, 1 = Evet |
+| **calisma_tipi** | İstihdam türü | Kategorik |
+| **ikamet_tipi** | Yaşanılan bölge türü | 0 = Kırsal, 1 = Kentsel |
+| **ortalama_seker** | Kandaki ortalama glikoz seviyesi | Sayısal (mg/dL) |
+| **vucut_kitle_indeksi** | Vücut Kitle İndeksi (BMI) | Sayısal (kg/m²) |
+| **sigara_durumu** | Tütün kullanım alışkanlığı | Kategorik |
+| **inme_durumu** | **Hedef Değişken (Label)** | **0 = Yok, 1 = Var** |
+
+---
+### 🛠 Yapılan İşlemler
+* **Veri Temizleme:** Eksik veriler (NaN) tespit edilerek temizlendi.
+* **Veri Tipleri:** Tüm sütunlar makine öğrenmesi algoritmalarının işleyebileceği sayısal ve kategorik formatlara dönüştürüldü.
+* **Model Hazırlığı:** Veri seti, eğitim (train) ve test aşamaları için hazır hale getirildi.
+
 
 
   
