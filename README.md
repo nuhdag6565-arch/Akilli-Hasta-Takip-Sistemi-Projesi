@@ -62,3 +62,5 @@ python database/seed_data.py
 - [ ] Risk tahmini ve erken uyarı sistemi
 - [ ] Web/Mobil arayüz
 - [ ] Kişiselleştirilmiş sağlık önerileri
+
+[Akıllı Hasta Takip Sistemi Tasarım Dosyasını Görüntülemek İçin Tıklayın](./AkilliHastaSystemi.pdf)
