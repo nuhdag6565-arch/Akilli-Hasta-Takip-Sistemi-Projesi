@@ -186,5 +186,33 @@ Haftalık Geliştirme Denetimi: Hafta boyunca yapılan tüm teknik geliştirmele
 * **Model Hazırlığı:** Veri seti, eğitim (train) ve test aşamaları için hazır hale getirildi.
 
 
+  ## 6. Hafta Geliştirmeleri
+
+**Yasmin Hammuş (Dokümantasyon Sorumlusu):**
+
+### connection.py
+- MongoDB bağlantı modülü
+- Fonksiyonlar: baglanti_olustur(), baglanti_kapat()
+- Veritabanı: hasta_takip_sistemi / localhost:27017
+
+### doktor_ekle.py
+- Doktor kayıt modülü
+- Fonksiyonlar: doktor_ekle(), doktorlari_listele(), tc_dogrula()
+- SHA256 şifreleme, otomatik DR-0001 numaralandırma
+
+### hasta_ekle.py
+- Hasta kayıt modülü
+- Fonksiyonlar: hasta_ekle(), hastalari_listele(), tc_dogrula()
+- Otomatik HS-0001 numaralandırma
+
+### schema.py
+- Veritabanı koleksiyon modülü
+- Koleksiyonlar: kullanicilar, hastalar, tibbi_kayitlar, yasam_tarzi, risk_tahminleri
+
+### seed_data.py
+- CSV'den MongoDB'ye veri yükleme modülü
+- 5111 hasta kaydını veritabanına aktarır
+
+
 
   
