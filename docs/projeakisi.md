@@ -226,6 +226,39 @@ Haftalık Geliştirme Denetimi: Hafta boyunca yapılan tüm teknik geliştirmele
 - Henüz geliştirilmedi
 - Test dosyaları eklenecek
 
+  # Yazılım Mühendisliği Projesi - Gereksinim Dokümantasyonu
+
+Bu depo (repository), projenin mimarisini ve makine öğrenmesi uygulamalarını destekleyen kütüphanelerin detaylı açıklamasını içermektedir.
+
+## 🛠 Kullanılan Teknolojiler ve Kütüphaneler
+
+Projenin stabil çalışması için `requirements.txt` dosyasında belirtilen bağımlılıkların açıklamaları aşağıdadır:
+
+### 1. Veri İşleme ve Sayısal Hesaplama
+* **Pandas (2.2.3):** Yüksek performanslı veri yapıları ve veri analizi araçları sunar. Özellikle DataFrame yapısı veri manipülasyonu için kullanılmıştır.
+* **NumPy (2.2.4):** Çok boyutlu diziler ve matrislerle yapılan karmaşık matematiksel işlemler için temel kütüphanedir.
+
+### 2. Yapay Zeka ve Makine Öğrenmesi
+* **Scikit-learn (1.6.1):** Klasik makine öğrenmesi algoritmaları (sınıflandırma, regresyon, kümeleme) için kullanılan temel kütüphanedir.
+* **TensorFlow (2.19.0):** Derin öğrenme modelleri ve sinir ağları eğitimi için kullanılan uçtan uca açık kaynaklı bir platformdur.
+* **Imbalanced-learn (0.13.0):** Dengesiz veri setlerini (imbalanced datasets) yönetmek ve SMOTE gibi yöntemlerle veri setini dengelemek için kritik rol oynar.
+
+### 3. Veritabanı Bağlantısı
+* **PyMongo (4.10.1):** NoSQL tabanlı **MongoDB** veritabanı ile Python arasındaki entegrasyonu sağlayan resmi sürücüdür.
+
+### 4. Web Çerçevesi ve Arayüz
+* **Flask (3.1.0):** Projenin arka uç (backend) API servislerini oluşturmak için kullanılan hafif bir web çerçevesidir.
+* **Streamlit (1.43.2):** Veri odaklı uygulamalar için hızlıca etkileşimli kullanıcı arayüzleri ve paneller oluşturmayı sağlar.
+
+---
+
+## 🚀 Kurulum Talimatları
+
+Geliştirme ortamını kurmak ve gerekli tüm kütüphaneleri yüklemek için aşağıdaki komutu terminalde çalıştırın:
+
+```bash
+pip install -r requirements.txt
+
   
 
 
