@@ -213,6 +213,21 @@ Haftalık Geliştirme Denetimi: Hafta boyunca yapılan tüm teknik geliştirmele
 - CSV'den MongoDB'ye veri yükleme modülü
 - 5111 hasta kaydını veritabanına aktarır
 
+### model/
+- Henüz geliştirilmedi
+- Makine öğrenimi modeli 
+  bu klasöre eklenecek
+
+  ### frontend/
+- Henüz geliştirilmedi
+- Streamlit arayüzü eklenecek
+
+### tests/
+- Henüz geliştirilmedi
+- Test dosyaları eklenecek
+
+  
+
 
 
   
