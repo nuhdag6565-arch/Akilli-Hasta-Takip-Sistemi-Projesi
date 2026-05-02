@@ -93,40 +93,31 @@ Kullanılan değişkenler: `hasta_id`, `cinsiyet`, `yas`, `hipertansiyon`, `kalp
 * Sistem analiz için sadece belirlenen CSV formatındaki özellikleri kabul edecektir.
 * Sistem geliştirme süresi proje takvimi ile sınırlıdır ve canlı bir hastane veritabanı entegrasyonu bu fazın kapsamı dışındadır.
 
----
-
+​# Proje İlerleme Raporu - 2. ve 3. Hafta
 ## 📅 2. Hafta: Gereksinim Analizi ve Planlama
-
 **Sorumlu:** Yasmin Hammuş (Dokümantasyon Sorumlusu)
-
 ### 📋 Yapılan Çalışmalar
 * **İş Paketi Tanımlama:** Proje başlangıç ve planlama aşaması (İP-01) tamamlanarak iş paketleri detaylandırıldı.
 * **Kapsam Yönetimi:** Sistemin fonksiyonel sınırları belirlendi; HBYS standartlarına uygun veri girişi ve inme riski tahminleme süreçleri analiz edildi.
 * **Risk Analizi:** Projenin başarı ölçütleri ve olası "kapsam kayması" (scope creep) riskleri değerlendirildi.
-
 ---
-
 ## 📅 3. Hafta: Sistem Tasarımı ve Veri Modelleme
-
 **Sorumlu:** Yasmin Hammuş (Dokümantasyon Sorumlusu)
-
 ### 🏗 Mimari ve Tasarım
 * **Sistem Mimarisi (İP-03):** Projenin teknik altyapısı ve modül etkileşimleri planlandı.
-* **Nesne Yönelimli Modelleme (OOP):** * `Kisi` üst sınıfından türetilen `Hasta` sınıf yapısı tasarlandı.
-    * Kalıtım (Inheritance) hiyerarşisi oluşturularak TC Kimlik ve iletişim bilgilerinin standartlaştırılması sağlandı.
+* **Python Veri Modelleme:** * **Mustafa Haccar** tarafından projenin temel veri yapısı **Python** diline uygun şekilde kurgulandı.
+    * Python sınıfları ve fonksiyonları kullanılarak TC Kimlik ve iletişim bilgilerinin standartlaştırılması sağlandı.
 * **Sektörel Standartlar:** Türkiye'deki Hastane Bilgi Yönetim Sistemleri (HBYS) standartları incelenerek veri modelleri bu kriterlere göre optimize edildi.
-
 ---
-
 ## 🛡️ 2. ve 3. Hafta: Teknik Tasarım ve Risk Yönetimi
 **Dokümantasyon Hazırlığı:** Yasmin Hammuş  
-**İş Paketleri ve Risk Analizi:** Mustafa Haccar
-### 🏗️ Nesne Yönelimli Tasarım (OOP)
-Haftalık geliştirme sürecinde, sistemin sürdürülebilirliği için **Kalıtım (Inheritance)** yapısı kullanılmıştır. Türkiye'deki HBYS standartlarına uygun olarak tüm aktörler ortak bir `Kisi` üst sınıfından türetilmiştir.
+**Teknik Altyapı ve Risk Analizi:** **Mustafa Haccar**
+### 🏗️ Python Tabanlı Teknik Tasarım
+Haftalık geliştirme sürecinde, sistemin sürdürülebilirliği için **Mustafa Haccar** tarafından oluşturulan Python mimarisi kullanılmıştır.
 * **Sektörel Standartlar:** TC kimlik doğrulaması ve iletişim bilgilerinin tek formatta tutulması sağlanmıştır.
-* **Kod Uygulaması:** `Hasta` sınıfı, `Kisi` sınıfından `extends` anahtar kelimesi ile türetilerek kodun tekrar yazılması önlenmiştir.
+* **Kod Uygulaması:** Mustafa'nın geliştirdiği Python altyapısı sayesinde kod tekrarı önlenmiş ve modüler bir yapı kurulmuştur.
 ### 📊 Risk Analiz Tablosu
-Projenin başarısını korumak amacıyla aşağıdaki olası riskler belirlenmiştir:
+> **Hazırlayan:** Mustafa Haccar
 
 | Risk | Olasılık | Etki | Önlem |
 | :--- | :--- | :--- | :--- |
@@ -139,7 +130,6 @@ Projenin başarısını korumak amacıyla aşağıdaki olası riskler belirlenmi
 * **Sürekli İyileştirme:** Her faz sonunda retrospektif yapılarak süreç iyileştirilecektir.
 * **Onay Mekanizması:** Çıktılar belgelenerek paydaş onayına sunulacak ve kayıt altına alınacaktır.
 * **Bağımlılık Yönetimi:** İş paketleri arasındaki bağımlılıklar göz önünde bulundurularak süreç takip edilecektir.
----
 
 4. Hafta Geliştirmeleri ve Görev Dağılımı
 Necmihan Aksu (Gereksinim Toplama ve Belgeleme)
