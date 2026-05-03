@@ -93,6 +93,35 @@ Kullanılan değişkenler: `hasta_id`, `cinsiyet`, `yas`, `hipertansiyon`, `kalp
 * Sistem analiz için sadece belirlenen CSV formatındaki özellikleri kabul edecektir.
 * Sistem geliştirme süresi proje takvimi ile sınırlıdır ve canlı bir hastane veritabanı entegrasyonu bu fazın kapsamı dışındadır.
 
+  ## REST API Tasarımı ve Spesifikasyon
+
+**Sorumlu:** Yasmin Hammuş
+
+### Temel Bilgiler
+- Base URL: http://localhost:5000/api
+- Format: JSON
+
+### Endpoint'ler
+
+**Hasta:**
+- GET /hastalar — Tüm hastaları listeler
+- POST /hastalar — Yeni hasta ekler
+- GET /hastalar/{hasta_id} — Hasta getirir
+
+**Doktor:**
+- GET /doktorlar — Tüm doktorları listeler
+- POST /doktorlar — Yeni doktor ekler
+
+**Risk Tahmini:**
+- POST /risk-tahmini — İnme riski tahmini
+
+### HTTP Kodları
+- 200: Başarılı
+- 201: Oluşturuldu
+- 400: Hatalı istek
+- 404: Bulunamadı
+- 500: Sunucu hatası
+
 ​# Proje İlerleme Raporu - 2. ve 3. Hafta
 ## 📅 2. Hafta: Gereksinim Analizi ve Planlama
 **Sorumlu:** Yasmin Hammuş (Dokümantasyon Sorumlusu)
