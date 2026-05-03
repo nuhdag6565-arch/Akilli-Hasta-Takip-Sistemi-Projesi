@@ -3,7 +3,7 @@ from pymongo.errors import ConnectionFailure
 
 # MongoDB bağlantı adresi
 MONGO_URL = "mongodb://localhost:27017/"
-VERITABANI_ADI = "hasta_takip_sistemi"
+VERITABANI_ADI = "akıllı_hasta_takip_sistemi"
 
 def baglanti_olustur():
     """MongoDB'ye bağlanır ve veritabanı nesnesini döndürür."""
