@@ -130,6 +130,36 @@ Kullanılan değişkenler: `hasta_id`, `cinsiyet`, `yas`, `hipertansiyon`, `kalp
 * **Kapsam Yönetimi:** Sistemin fonksiyonel sınırları belirlendi; HBYS standartlarına uygun veri girişi ve inme riski tahminleme süreçleri analiz edildi.
 * **Risk Analizi:** Projenin başarı ölçütleri ve olası "kapsam kayması" (scope creep) riskleri değerlendirildi.
 ---
+## 2. Hafta - REST API Tasarımı ve Entegrasyon Planı
+
+**Yasmin Hammuş (REST API Tasarımı ve Entegrasyon Planlaması):**
+
+### API Tasarım Kararları
+- Flask framework seçildi (hafif ve esnek yapısı nedeniyle)
+- JSON formatı belirlendi (tüm istek ve yanıtlar için)
+- Base URL: http://localhost:5000/api
+- Kimlik doğrulama: TC kimlik numarası ile
+
+### Tasarlanan Endpoint'ler
+- GET /hastalar — Tüm hastaları listeler
+- POST /hastalar — Yeni hasta ekler
+- GET /hastalar/{hasta_id} — Belirli hasta getirir
+- GET /doktorlar — Tüm doktorları listeler
+- POST /doktorlar — Yeni doktor ekler
+- POST /risk-tahmini — İnme riski tahmini yapar
+
+### Entegrasyon Planı
+- Veritabanı → API: connection.py ile MongoDB bağlantısı
+- API → ML Modeli: POST /risk-tahmini endpoint'i
+- API → Arayüz: Streamlit ile Flask API bağlantısı
+
+### HTTP Hata Kodları
+- 200: Başarılı
+- 201: Oluşturuldu  
+- 400: Hatalı istek
+- 404: Bulunamadı
+- 500: Sunucu hatası
+
 ## 📅 3. Hafta: Sistem Tasarımı ve Veri Modelleme
 **Sorumlu:** Yasmin Hammuş (Dokümantasyon Sorumlusu)
 ### 🏗 Mimari ve Tasarım
