@@ -63,5 +63,3 @@ python database/seed_data.py
 - [ ] Web/Mobil arayüz
 - [ ] Kişiselleştirilmiş sağlık önerileri
 
-
-[Akıllı Hasta Takip Sistemi Tasarım Dosyasını Görüntülemek İçin Tıklayın](./AkıllıHastaSystemi.pdf)
