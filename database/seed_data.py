@@ -9,8 +9,8 @@ Version: 2.0
 import pandas as pd
 from datetime import datetime, timedelta
 import random
-from connection import baglanti_olustur
-from schema import koleksiyonlari_olustur
+from database.connection import baglanti_olustur
+from database.schema import koleksiyonlari_olustur
 
 # ============================================================================
 # ÖRNEK VERİ KÜMELERİ
@@ -74,31 +74,6 @@ TANI_LISTESI = [
     "Normal sağlık durumu",
 ]
 
-YASAM_TARZI_VERI = [
-    {
-        "sigara_durumu": "Hiç İçmedi",
-        "gunluk_sigara": 0,
-        "alkol_durumu": "Hiç",
-        "egzersiz_durumu": "Haftada 3+",
-        "beslenme_tipi": "Dengeli",
-    },
-    {
-        "sigara_durumu": "Halen İçiyor",
-        "gunluk_sigara": random.randint(5, 30),
-        "alkol_durumu": "Düzenli",
-        "egzersiz_durumu": "Nadiren",
-        "beslenme_tipi": "Yüksek Yağ",
-    },
-    {
-        "sigara_durumu": "Eski İçici",
-        "sigarayı_birakma_yili": random.randint(2015, 2023),
-        "gunluk_sigara": 0,
-        "alkol_durumu": "Nadiren",
-        "egzersiz_durumu": "Haftada 1-2",
-        "beslenme_tipi": "Yüksek Tuz",
-    },
-]
-
 # ============================================================================
 # DOKTOR VERİSİ YÜKLEME
 # ============================================================================
@@ -140,18 +115,45 @@ def hasta_verisi_yukle_csv(db):
         df = pd.read_csv("data/processed/temizlenmis_hasta_verisi.csv")
         print(f"📄 CSV okundu: {len(df)} hasta kaydı bulundu")
         
+        # Sigara durumu mapping
+        sigara_mapping = {
+            0: "Hiç İçmedi",
+            1: "Halen İçiyor",
+            2: "Eski İçici"
+        }
+        
+        # Çalışma tipi mapping
+        calisma_mapping = {
+            0: "Özel Sektör",
+            1: "Kamu",
+            2: "Serbest Meslek",
+            3: "Çocuk",
+            4: "Emekli"
+        }
+        
         # CSV verileri uygun formata dönüştür
         for idx, row in df.iterrows():
+            # Cinsiyet dönüşümü: 0=Kadın, 1=Erkek
+            cinsiyet = "Erkek" if int(row.get("cinsiyet", 0)) == 1 else "Kadın"
+            
+            # Yaş hesaplama
+            yas = int(row.get("yas", 0))
+            dogum_yili = datetime.now().year - yas
+            
             # Hasta demografik verisi
             hasta = {
                 "hasta_no": f"HS-{str(idx + 1).zfill(4)}",
                 "tc_no": f"{10000000000 + idx}",  # Benzersiz TC numarası
                 "ad": f"Hasta_{idx+1}",
                 "soyad": f"Kaydı",
-                "yas": int(row.get("yas", 0)),
-                "cinsiyet": "Erkek" if idx % 2 == 0 else "Kadın",
+                "dogum_yili": dogum_yili,
+                "yas": yas,
+                "cinsiyet": cinsiyet,
                 "telefon": f"0555{str(idx).zfill(7)}",
                 "email": f"hasta{idx+1}@email.com",
+                "evli_mi": "Evet" if int(row.get("evli_mi", 0)) == 1 else "Hayır",
+                "calisma_tipi": calisma_mapping.get(int(row.get("calisma_tipi", 0)), "Bilinmiyor"),
+                "ikamet_tipi": "Kentsel" if int(row.get("ikamet_tipi", 0)) == 1 else "Kırsal",
                 "kan_grubu": random.choice(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]),
                 "sigorta_numarasi": f"SGT{str(idx).zfill(8)}",
                 "aktif": True,
@@ -161,10 +163,11 @@ def hasta_verisi_yukle_csv(db):
             
             db.hastalar.insert_one(hasta)
             
-            # Yaşam tarzı verisi
+            # Yaşam tarzı verisi - CSV'den gelen verilerle
+            sigara_kodu = int(row.get("sigara_durumu", 0))
             yasam_tarzi = {
                 "hasta_id": hasta["hasta_no"],
-                "sigara_durumu": row.get("sigara_durumu", "Hiç İçmedi"),
+                "sigara_durumu": sigara_mapping.get(sigara_kodu, "Hiç İçmedi"),
                 "alkol_durumu": random.choice(["Hiç", "Nadiren", "Hafta Sonu", "Düzenli"]),
                 "egzersiz_durumu": random.choice(["Hiç", "Nadiren", "Haftada 1-2", "Haftada 3+"]),
                 "gunluk_adim": random.randint(2000, 15000),
@@ -176,13 +179,36 @@ def hasta_verisi_yukle_csv(db):
                 "olusturma_tarihi": datetime.now(),
             }
             db.yasam_tarzi.insert_one(yasam_tarzi)
+            
+            # Tıbbi kayıt oluştur (CSV'deki sağlık verileriyle)
+            if random.random() > 0.5:  # %50 hastaya tıbbi kayıt ekle
+                tibbi_kayit = {
+                    "kayit_no": f"TK-{str(idx + 1).zfill(5)}",
+                    "hasta_id": hasta["hasta_no"],
+                    "doktor_id": random.choice(["KL-0001", "KL-0002"]),
+                    "kayit_tarihi": datetime.now() - timedelta(days=random.randint(1, 180)),
+                    "ziyaret_tipi": random.choice(["Rutin Kontrol", "Acil", "Takip"]),
+                    "sikayet": random.choice(SIKAYET_LISTESI),
+                    "tanı": random.choice(TANI_LISTESI),
+                    "hipertansiyon": bool(int(row.get("hipertansiyon", 0))),
+                    "kalp_hastaligi": bool(int(row.get("kalp_hastaligi", 0))),
+                    "ortalama_seker": float(row.get("ortalama_seker", 0)),
+                    "vucut_kitle_indeksi": float(row.get("vucut_kitle_indeksi", 0)),
+                    "notlar": "CSV verisinden yüklendi",
+                    "olusturma_tarihi": datetime.now(),
+                }
+                db.tibbi_kayitlar.insert_one(tibbi_kayit)
         
         print(f"✅ {db.hastalar.count_documents({})} hasta yüklendi")
-        print(f"✅ {db.yasam_tarzi.count_documents({})} yaşam tarzı kaydı yüklendi\n")
+        print(f"✅ {db.yasam_tarzi.count_documents({})} yaşam tarzı kaydı yüklendi")
+        print(f"✅ {db.tibbi_kayitlar.count_documents({})} tıbbi kayıt yüklendi\n")
         return True
         
     except FileNotFoundError:
         print("⚠️  CSV dosyası bulunamadı. Örnek veri kullanılacak.\n")
+        return False
+    except Exception as e:
+        print(f"❌ CSV yükleme hatası: {str(e)}\n")
         return False
 
 def hasta_verisi_yukle_ornekler(db):

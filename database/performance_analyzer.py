@@ -7,9 +7,9 @@ Version: 1.0
 """
 
 import time
-from connection import baglanti_olustur
 from datetime import datetime, timedelta
 import random
+from database.connection import baglanti_olustur
 
 # ============================================================================
 # PERFORMANS ANALİZİ FONKSİYONLARI
@@ -203,15 +203,16 @@ def detay_sorgu_analizi(db):
         koleksiyon = db[örnek["koleksiyon"]]
         
         # Explain stats
-        eksplein = list(koleksiyon.find(örnek["sorgu"]).explain())
+        explain_result = koleksiyon.find(örnek["sorgu"]).explain()
+        execution_stats = explain_result.get("executionStats", {}) if isinstance(explain_result, dict) else {}
         
         print(f"📌 {örnek['adi']}")
         print(f"   Koleksiyon: {örnek['koleksiyon']}")
         print(f"   Sorgu: {örnek['sorgu']}")
-        
-        if eksplein:
-            stats = eksplein[0].get("executionStats", {}) if isinstance(eksplein[0], dict) else {}
-            print(f"   ✅ Sorgu çalıştırılabilir")
+        print(f"   ✅ Sorgu çalıştırılabilir")
+        if execution_stats:
+            print(f"   ⏱️  executionTimeMillis: {execution_stats.get('executionTimeMillis', 'N/A')}")
+            print(f"   🧠 Index Usage: {execution_stats.get('executionStages', 'N/A') if 'executionStages' in execution_stats else 'N/A'}")
         print()
 
 def detay_rapor_olustur(db):

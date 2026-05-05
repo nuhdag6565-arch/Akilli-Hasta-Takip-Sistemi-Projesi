@@ -1,0 +1,14 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.$py.class
+
+# Distribution / packaging
+.Python
+env/
+venv/
+ENV/
+venv.bak/
+
+# Ignore database cache files
+database/__pycache__/

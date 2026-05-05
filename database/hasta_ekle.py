@@ -1,4 +1,4 @@
-from connection import baglanti_olustur
+from database.connection import baglanti_olustur
 from datetime import datetime
 
 def hasta_no_olustur(db):
@@ -33,6 +33,10 @@ def hasta_ekle(ad, soyad, tc_no, dogum_yili, cinsiyet, telefon):
         return None
 
     hasta_no = hasta_no_olustur(db)
+    
+    # Yaş hesaplama
+    from datetime import datetime
+    yas = datetime.now().year - dogum_yili
 
     hasta = {
         "hasta_no": hasta_no,
@@ -40,9 +44,12 @@ def hasta_ekle(ad, soyad, tc_no, dogum_yili, cinsiyet, telefon):
         "ad": ad,
         "soyad": soyad,
         "dogum_yili": dogum_yili,
+        "yas": yas,
         "cinsiyet": cinsiyet,
         "telefon": telefon,
+        "basvuru_tarihi": datetime.now(),
         "kayit_tarihi": datetime.now(),
+        "olusturma_tarihi": datetime.now(),
         "aktif": True
     }
 
@@ -74,7 +81,7 @@ if __name__ == "__main__":
     # İki Ahmet Yılmaz — farklı TC ile
     hasta_ekle("Ahmet", "Yilmaz", 12345678901, 1975, "Erkek", "0532-111-0001")
     hasta_ekle("Ahmet", "Yilmaz", 98765432109, 1983, "Erkek", "0533-222-0002")
-    hasta_ekle("Zeynep", "Celik", 11122233344, 1990, "Kadin", "0535-333-0003")
+    hasta_ekle("Zeynep", "Celik", 11122233344, 1990, "Kadın", "0535-333-0003")
     # Aynı TC ile tekrar eklemeye çalış — engellenmeli
     hasta_ekle("Ahmet", "Yilmaz", 12345678901, 1975, "Erkek", "0532-111-0001")
     hastalari_listele()

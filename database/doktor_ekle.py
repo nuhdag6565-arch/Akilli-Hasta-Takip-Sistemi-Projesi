@@ -1,4 +1,4 @@
-from connection import baglanti_olustur
+from database.connection import baglanti_olustur
 from datetime import datetime
 import hashlib
 
@@ -6,10 +6,10 @@ def sifre_hashle(sifre):
     """Şifreyi güvenli hale getirir."""
     return hashlib.sha256(sifre.encode()).hexdigest()
 
-def doktor_no_olustur(db):
-    """Otomatik artan doktor numarası üretir. DR-0001, DR-0002..."""
-    toplam = db.doktorlar.count_documents({})
-    return f"DR-{str(toplam + 1).zfill(4)}"
+def kullanici_no_olustur(db):
+    """Otomatik artan kullanıcı numarası üretir. KL-0001, KL-0002..."""
+    toplam = db.kullanicilar.count_documents({})
+    return f"KL-{str(toplam + 1).zfill(4)}"
 
 def tc_dogrula(tc):
     """TC kimlik numarasının geçerli olup olmadığını kontrol eder."""
@@ -19,7 +19,7 @@ def tc_dogrula(tc):
         return False
     return True
 
-def doktor_ekle(ad, soyad, tc_no, uzmanlik, telefon, sifre):
+def doktor_ekle(ad, soyad, tc_no, uzmanlik, telefon, sifre, email=None, departman=None):
     """Yeni doktor kaydı ekler."""
     db = baglanti_olustur()
     if db is None:
@@ -31,34 +31,44 @@ def doktor_ekle(ad, soyad, tc_no, uzmanlik, telefon, sifre):
         return None
 
     # Aynı TC ile kayıt var mı?
-    mevcut = db.doktorlar.find_one({"tc_no": str(tc_no)})
+    mevcut = db.kullanicilar.find_one({"tc_no": str(tc_no)})
     if mevcut:
         print(f"Hata: {tc_no} TC numarası zaten kayıtlı!")
-        print(f"  Kayıtlı kişi: Dr. {mevcut['ad']} {mevcut['soyad']} [{mevcut['doktor_no']}]")
+        print(f"  Kayıtlı kişi: Dr. {mevcut['ad']} {mevcut['soyad']} [{mevcut['kullanici_no']}]")
         return None
 
-    doktor_no = doktor_no_olustur(db)
+    if email is None:
+        email = f"{ad.lower()}.{soyad.lower()}@hospital.com"
+    
+    if departman is None:
+        departman = f"{uzmanlik} Kliniği"
+
+    kullanici_no = kullanici_no_olustur(db)
 
     doktor = {
-        "doktor_no": doktor_no,
+        "kullanici_no": kullanici_no,
         "tc_no": str(tc_no),
         "ad": ad,
         "soyad": soyad,
-        "uzmanlik": uzmanlik,
+        "email": email,
+        "uzmanlık_alani": uzmanlik,
+        "departman": departman,
         "telefon": telefon,
+        "rol": "doktor",
         "sifre_hash": sifre_hashle(sifre),
         "kayit_tarihi": datetime.now(),
+        "olusturma_tarihi": datetime.now(),
         "aktif": True
     }
 
-    sonuc = db.doktorlar.insert_one(doktor)
+    sonuc = db.kullanicilar.insert_one(doktor)
     print(f"Doktor eklendi!")
-    print(f"  Doktor No: {doktor_no}")
-    print(f"  TC No    : {tc_no}")
-    print(f"  Ad       : Dr. {ad} {soyad}")
-    print(f"  Uzmanlik : {uzmanlik}")
-    print(f"  ID       : {sonuc.inserted_id}")
-    return doktor_no
+    print(f"  Kullanıcı No: {kullanici_no}")
+    print(f"  TC No      : {tc_no}")
+    print(f"  Ad         : Dr. {ad} {soyad}")
+    print(f"  Uzmanlık   : {uzmanlik}")
+    print(f"  ID         : {sonuc.inserted_id}")
+    return kullanici_no
 
 def doktorlari_listele():
     """Tüm doktorları listeler."""
@@ -66,26 +76,26 @@ def doktorlari_listele():
     if db is None:
         return
 
-    doktorlar = list(db.doktorlar.find())
+    doktorlar = list(db.kullanicilar.find({"rol": "doktor"}))
     if not doktorlar:
         print("Henüz kayıtlı doktor yok.")
         return
 
     print(f"\nKayıtlı doktorlar ({len(doktorlar)} kişi):")
     for d in doktorlar:
-        print(f"  [{d['doktor_no']}] Dr. {d['ad']} {d['soyad']} | TC: {d['tc_no']} | {d['uzmanlik']} | {d['telefon']}")
+        print(f"  [{d['kullanici_no']}] Dr. {d['ad']} {d['soyad']} | TC: {d['tc_no']} | {d['uzmanlık_alani']} | {d['telefon']}")
 
 if __name__ == "__main__":
-    # Eski doktorları temizle
-    from connection import baglanti_olustur
+    # Eski kullanıcı kayıtlarını temizle
     db = baglanti_olustur()
-    db.doktorlar.delete_many({})
-    print("Eski doktor kayıtları temizlendi.\n")
+    if db is not None:
+        db.kullanicilar.delete_many({})
+        print("Eski kullanıcı kayıtları temizlendi.\n")
 
-    # İki Ayşe Kaya — farklı TC ile
+    # Örnek doktor kayıtları
     doktor_ekle("Ayse", "Kaya", 12345678901, "Kardiyoloji", "0532-111-2233", "sifre123")
     doktor_ekle("Ayse", "Kaya", 98765432109, "Kardiyoloji", "0533-222-3344", "sifre456")
-    doktor_ekle("Mehmet", "Demir", 11122233344, "Noroloji", "0533-444-5566", "sifre789")
+    doktor_ekle("Mehmet", "Demir", 11122233344, "Nöroloji", "0533-444-5566", "sifre789")
 
     # Aynı TC ile tekrar eklemeye çalış — engellenmeli
     doktor_ekle("Ayse", "Kaya", 12345678901, "Kardiyoloji", "0532-111-2233", "sifre123")

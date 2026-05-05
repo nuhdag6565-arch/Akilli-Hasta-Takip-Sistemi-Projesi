@@ -8,7 +8,7 @@ Version: 2.0
 
 from pymongo import ASCENDING, DESCENDING
 from pymongo.errors import OperationFailure
-from connection import baglanti_olustur
+from database.connection import baglanti_olustur
 
 # ============================================================================
 # VERİTABANI ŞEMA TASARIMI
@@ -32,6 +32,7 @@ KOLEKSIYON_ŞEMALARI = {
                     "rol": {"enum": ["doktor", "yönetici", "teknisyen", "hemşire"], "description": "Sistem rolü"},
                     "uzmanlık_alani": {"bsonType": "string", "description": "Doktor ise uzmanlık alanı"},
                     "departman": {"bsonType": "string", "description": "Çalıştığı departman"},
+                    "sifre_hash": {"bsonType": "string", "description": "Kullanıcı şifre hash'i"},
                     "aktif": {"bsonType": "bool", "description": "Kullanıcı aktif mi?"},
                     "kayit_tarihi": {"bsonType": "date", "description": "Kayıt tarihi"},
                     "son_giris_tarihi": {"bsonType": "date", "description": "Son giriş tarihi"},
@@ -54,10 +55,14 @@ KOLEKSIYON_ŞEMALARI = {
                     "ad": {"bsonType": "string", "description": "Hastanın adı"},
                     "soyad": {"bsonType": "string", "description": "Hastanın soyadı"},
                     "dogum_tarihi": {"bsonType": "date", "description": "Doğum tarihi"},
+                    "dogum_yili": {"bsonType": "int", "minimum": 1900, "maximum": 2100, "description": "Doğum yılı"},
                     "yas": {"bsonType": "int", "minimum": 0, "maximum": 150, "description": "Yaş (0-150)"},
                     "cinsiyet": {"enum": ["Erkek", "Kadın"], "description": "Cinsiyet"},
                     "telefon": {"bsonType": "string", "description": "Telefon numarası"},
                     "email": {"bsonType": "string", "description": "E-posta adresi"},
+                    "evli_mi": {"bsonType": "string", "description": "Medeni durum"},
+                    "calisma_tipi": {"bsonType": "string", "description": "İstihdam türü"},
+                    "ikamet_tipi": {"bsonType": "string", "description": "Yaşanılan bölge türü"},
                     "adres": {"bsonType": "string", "description": "Ev adresi"},
                     "sehir": {"bsonType": "string", "description": "Şehir"},
                     "ilce": {"bsonType": "string", "description": "İlçe"},
@@ -68,6 +73,7 @@ KOLEKSIYON_ŞEMALARI = {
                     "sigorta_numarasi": {"bsonType": "string", "description": "Sağlık sigortası numarası"},
                     "aktif": {"bsonType": "bool", "description": "Hasta aktif mi?"},
                     "basvuru_tarihi": {"bsonType": "date", "description": "Başvuru tarihi"},
+                    "kayit_tarihi": {"bsonType": "date", "description": "Kayıt tarihi"},
                     "son_ziyaret_tarihi": {"bsonType": "date", "description": "Son ziyaret tarihi"},
                     "olusturma_tarihi": {"bsonType": "date", "description": "Sistem kaydı oluşturma tarihi"}
                 }
@@ -80,7 +86,7 @@ KOLEKSIYON_ŞEMALARI = {
         "validators": {
             "$jsonSchema": {
                 "bsonType": "object",
-                "required": ["kayit_no", "hasta_id", "kayit_tarihi", "doktor_id"],
+                "required": ["kayit_no", "hasta_id", "kayit_tarihi"],
                 "properties": {
                     "_id": {"bsonType": "objectId"},
                     "kayit_no": {"bsonType": "string", "description": "Benzersiz tıbbi kayıt ID (TK-0001)"},
@@ -90,6 +96,10 @@ KOLEKSIYON_ŞEMALARI = {
                     "ziyaret_tipi": {"enum": ["Rutin Kontrol", "Acil", "Takip", "Danışma"], "description": "Ziyaret türü"},
                     "sikayet": {"bsonType": "string", "description": "Hasta şikayetleri"},
                     "tanı": {"bsonType": "string", "description": "Doktor tanısı"},
+                    "hipertansiyon": {"bsonType": "bool", "description": "Hipertansiyon var mı?"},
+                    "kalp_hastaligi": {"bsonType": "bool", "description": "Kalp hastalığı var mı?"},
+                    "ortalama_seker": {"bsonType": "double", "description": "Ortalama kan şekeri seviyesi"},
+                    "vucut_kitle_indeksi": {"bsonType": "double", "description": "BMI değeri"},
                     "ilaç_reçetesi": {
                         "bsonType": "array",
                         "items": {
@@ -257,56 +267,56 @@ def koleksiyonlari_olustur():
     """
     db = baglanti_olustur()
     if db is None:
-        print("❌ Veritabanı bağlantısı başarısız!")
+        print("ERROR: Database connection failed.")
         return False
 
-    print("🔧 Veritabanı şeması oluşturuluyor...\n")
+    print("Database schema creation started...\n")
     mevcut = db.list_collection_names()
 
     for koleksiyon_adi, schema in KOLEKSIYON_ŞEMALARI.items():
         if koleksiyon_adi in mevcut:
-            print(f"⏭️  {koleksiyon_adi} koleksiyonu zaten var, atlandı.")
+            print(f"SKIP: {koleksiyon_adi} collection already exists.")
             continue
         
         try:
             validator = schema.get("validators", {})
             if validator:
-                db.create_collection(koleksiyon_adi, **validator)
+                db.create_collection(koleksiyon_adi, validator=validator)
             else:
                 db.create_collection(koleksiyon_adi)
-            print(f"✅ {koleksiyon_adi} koleksiyonu oluşturuldu.")
+            print(f"OK: {koleksiyon_adi} collection created.")
         except Exception as e:
-            print(f"❌ {koleksiyon_adi} oluşturulurken hata: {str(e)}")
+            print(f"ERROR: Failed to create {koleksiyon_adi}: {str(e)}")
 
     print("\n" + "="*60)
-    print("📊 İNDEKSLER OLUŞTURULUYOR...")
+    print("INDEXES ARE BEING CREATED...")
     print("="*60 + "\n")
     
     for koleksiyon_adi, indexler in INDEKSLER.items():
         if koleksiyon_adi not in db.list_collection_names():
-            print(f"⏭️  {koleksiyon_adi} koleksiyonu bulunamadı.")
+            print(f"SKIP: {koleksiyon_adi} collection not found.")
             continue
         
         koleksiyon = db[koleksiyon_adi]
         for index_spec, options in indexler:
             try:
                 index_adi = koleksiyon.create_index(list(index_spec.items()), **options)
-                print(f"✅ {koleksiyon_adi}: {index_adi} indexi oluşturuldu")
+                print(f"OK: {koleksiyon_adi} index created: {index_adi}")
             except OperationFailure as e:
                 if "already exists" not in str(e):
-                    print(f"❌ {koleksiyon_adi} index hatası: {str(e)}")
+                    print(f"ERROR: {koleksiyon_adi} index error: {str(e)}")
 
     print("\n" + "="*60)
-    print("📋 VERİTABANI DURUMU")
+    print("DATABASE STATUS")
     print("="*60)
-    print(f"Veritabanı Adı: {db.name}")
-    print(f"Toplam Koleksiyon: {len(db.list_collection_names())}")
-    print("Koleksiyonlar:")
+    print("Database Name:", db.name)
+    print(f"Total Collections: {len(db.list_collection_names())}")
+    print("Collections:")
     for k in sorted(db.list_collection_names()):
         koleksiyon = db[k]
         belge_sayisi = koleksiyon.count_documents({})
-        index_sayisi = len(koleksiyon.list_indexes())
-        print(f"  📁 {k:25} | {belge_sayisi:6} belge | {index_sayisi} index")
+        index_sayisi = len(list(koleksiyon.list_indexes()))
+        print(f"  {k:25} | {belge_sayisi:6} documents | {index_sayisi} indexes")
     
     return True
 

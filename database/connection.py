@@ -3,25 +3,25 @@ from pymongo.errors import ConnectionFailure
 
 # MongoDB bağlantı adresi
 MONGO_URL = "mongodb://localhost:27017/"
-VERITABANI_ADI = "akıllı_hasta_takip_sistemi"
+VERITABANI_ADI = "akilli_hasta_takip_sistemi"
 
 def baglanti_olustur():
-    """MongoDB'ye bağlanır ve veritabanı nesnesini döndürür."""
+    """Connect to MongoDB and return the database object."""
     try:
         client = MongoClient(MONGO_URL)
         client.admin.command("ping")
-        print("MongoDB bağlantısı başarılı!")
+        print("MongoDB connection successful!")
         return client[VERITABANI_ADI]
     except ConnectionFailure:
-        print("Hata: MongoDB'ye bağlanılamadı!")
-        print("MongoDB servisinin çalıştığından emin ol.")
+        print("Error: Could not connect to MongoDB!")
+        print("Ensure MongoDB service is running.")
         return None
 
 def baglanti_kapat(client):
-    """MongoDB bağlantısını kapatır."""
+    """Close the MongoDB connection."""
     if client:
         client.close()
-        print("Bağlantı kapatıldı.")
+        print("Connection closed.")
 
 if __name__ == "__main__":
     db = baglanti_olustur()
