@@ -1,462 +1,287 @@
 """
-Modül Adı: Database Unit Tests
-Açıklama: Veritabanı bağlantısı, şema ve veri işlemleri için unit testler
-Sorumlu: Nuh Dağ (Veritabanı)
-Tarih: 2026-05-05
-Version: 1.0
+Modül Adı: test_database.py
+Açıklama : Veritabanı modüllerinin birim testleri.
+           Her değişiklikten sonra çalıştırılmalıdır.
+Sorumlu  : Nuh Dağ (Veritabanı)
+Tarih    : 2026-05-08
+Version  : 3.0
 """
 
-import unittest
-from datetime import datetime, timedelta
-from pymongo import MongoClient
-import uuid
-import sys
-import os
+import sys, os, unittest
+from datetime import datetime
 
-# Parent dizini path'e ekle
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'database'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from connection import baglanti_olustur, baglanti_kapat
-from schema import koleksiyonlari_olustur
-
-# ============================================================================
-# UNIT TEST SINIFLARI
-# ============================================================================
-
-class TestDatabaseConnection(unittest.TestCase):
-    """Veritabanı bağlantı testleri"""
-    
-    def setUp(self):
-        """Her test başında MongoDB'ye bağlan"""
-        self.db = baglanti_olustur()
-    
-    def tearDown(self):
-        """Her test sonunda temizle"""
-        if self.db is not None:
-            try:
-                self.db.client.close()
-            except:
-                pass
-    
-    def test_baglanti_basarili(self):
-        """MongoDB bağlantısı başarılı mı?"""
-        self.assertIsNotNone(self.db, "Veritabanı bağlantısı başarısız")
-        self.assertEqual(self.db.name, "akilli_hasta_takip_sistemi")
-        print("OK: Connection test passed")
-    
-    def test_veritabani_adi_dogru(self):
-        """Veritabanı adı doğru mu?"""
-        self.assertEqual(self.db.name, "akilli_hasta_takip_sistemi")
-        print("OK: Database name test passed")
-    
-    def test_koleksiyonlar_var(self):
-        """Gerekli koleksiyonlar var mı?"""
-        gerekli_koleksiyonlar = [
-            "kullanicilar",
-            "hastalar",
-            "tibbi_kayitlar",
-            "yasam_tarzi",
-            "risk_tahminleri"
-        ]
-        mevcut = self.db.list_collection_names()
-        for koleksiyon in gerekli_koleksiyonlar:
-            self.assertIn(koleksiyon, mevcut, f"{koleksiyon} koleksiyonu bulunamadı")
-        print("OK: Collection presence test passed")
+from database.connection       import baglanti_olustur, baglanti_kapat
+from database.hasta_islemleri  import (
+    hasta_ekle, tibbi_bilgi_ekle, yasam_tarzi_guncelle,
+    hasta_getir, hasta_ara, muayene_gecmisi, hasta_guncelle,
+)
+from database.risk_islemleri   import (
+    risk_sonucu_kaydet, hasta_risk_gecmisi, risk_istatistikleri,
+)
+from database.doktor_islemleri import doktor_ekle, doktor_giris
 
 
-class TestHastaVeriIsleri(unittest.TestCase):
-    """Hasta veri işlemleri testleri"""
-    
+# ════════════════════════════════════════════════════════════════
+# YARDIMCI: Her testte temiz bir başlangıç
+# ════════════════════════════════════════════════════════════════
+
+def temizle(db, *koleksiyonlar):
+    for k in koleksiyonlar:
+        db[k].delete_many({})
+
+
+# ════════════════════════════════════════════════════════════════
+# TEST SINIFLARI
+# ════════════════════════════════════════════════════════════════
+
+class T01_Baglanti(unittest.TestCase):
+    """MongoDB bağlantı testleri"""
+
+    def test_01_baglanti_kuruluyor(self):
+        db = baglanti_olustur()
+        self.assertIsNotNone(db, "Bağlantı başarısız")
+        self.assertEqual(db.name, "inme_risk_sistemi")
+
+    def test_02_koleksiyonlar_var(self):
+        db = baglanti_olustur()
+        mevcut = db.list_collection_names()
+        for k in ["hastalar", "tibbi_bilgiler",
+                  "yasam_tarzi", "inme_risk_tahminleri", "doktorlar"]:
+            self.assertIn(k, mevcut, f"'{k}' koleksiyonu eksik")
+
+
+class T02_HastaEkleme(unittest.TestCase):
+    """Hasta CRUD testleri"""
+
     def setUp(self):
         self.db = baglanti_olustur()
-        if self.db is not None:
-            self.db.hastalar.delete_many({})  # Testi temiz başlat
-    
-    def tearDown(self):
-        if self.db is not None:
-            self.db.hastalar.delete_many({})
-            self.db.client.close()
-    
-    def test_hasta_ekleme(self):
-        """Hasta kaydı başarıyla eklenebilir mi?"""
-        test_hasta = {
-            "hasta_no": "HS-0001",
-            "tc_no": "12345678901",
-            "ad": "Test",
-            "soyad": "Hastası",
-            "yas": 50,
-            "cinsiyet": "Erkek"
-        }
-        
-        sonuc = self.db.hastalar.insert_one(test_hasta)
-        self.assertIsNotNone(sonuc.inserted_id, "Hasta kaydı başarısız")
-        print("OK: Patient insert test passed")
-    
-    def test_hasta_benzersizlik(self):
-        """TC numarası benzersiz mi (unique)?"""
-        test_hasta = {
-            "hasta_no": "HS-0001",
-            "tc_no": "11111111111",
-            "ad": "Birinci",
-            "soyad": "Hasta",
-            "yas": 50,
-            "cinsiyet": "Erkek"
-        }
-        
-        self.db.hastalar.insert_one(test_hasta)
-        
-        # Aynı TC ile tekrar eklemeye çalış
-        with self.assertRaises(Exception):
-            test_hasta["hasta_no"] = "HS-0002"
-            self.db.hastalar.insert_one(test_hasta)
-        
-        print("OK: Uniqueness test passed")
-    
-    def test_hasta_arama_tc_ile(self):
-        """TC numarasıyla hasta bulunabilir mi?"""
-        test_hasta = {
-            "hasta_no": "HS-0001",
-            "tc_no": "99999999999",
-            "ad": "Aranacak",
-            "soyad": "Hasta",
-            "yas": 45,
-            "cinsiyet": "Kadın"
-        }
-        
-        self.db.hastalar.insert_one(test_hasta)
-        bulunan = self.db.hastalar.find_one({"tc_no": "99999999999"})
-        
-        self.assertIsNotNone(bulunan, "Hasta bulunamadı")
-        self.assertEqual(bulunan["ad"], "Aranacak")
-        print("OK: Patient search test passed")
-    
-    def test_hasta_guncelleme(self):
-        """Hasta kaydı güncellenebilir mi?"""
-        test_hasta = {
-            "hasta_no": "HS-0001",
-            "tc_no": "88888888888",
-            "ad": "Eski",
-            "soyad": "Ad",
-            "yas": 40,
-            "cinsiyet": "Erkek"
-        }
-        
-        self.db.hastalar.insert_one(test_hasta)
-        
-        # Güncelle
-        self.db.hastalar.update_one(
-            {"tc_no": "88888888888"},
-            {"$set": {"ad": "Yeni", "yas": 41}}
+        temizle(self.db, "hastalar", "tibbi_bilgiler",
+                "yasam_tarzi", "inme_risk_tahminleri")
+
+    # ── Başarılı ekleme ────────────────────────────────────────
+    def test_01_hasta_eklenir(self):
+        r = hasta_ekle("Ali", "Veli", 55, "Erkek", "05551111111")
+        self.assertTrue(r["basarili"])
+        self.assertIn("HS-", r["hasta_id"])
+
+    # ── Zorunlu alan eksik ─────────────────────────────────────
+    def test_02_ad_bos_hata(self):
+        r = hasta_ekle("", "Veli", 55, "Erkek")
+        self.assertFalse(r["basarili"])
+
+    def test_03_gecersiz_yas(self):
+        r = hasta_ekle("Ali", "Veli", 200, "Erkek")
+        self.assertFalse(r["basarili"])
+
+    def test_04_gecersiz_cinsiyet(self):
+        r = hasta_ekle("Ali", "Veli", 55, "Bilinmiyor")
+        self.assertFalse(r["basarili"])
+
+    # ── Getir ve ara ───────────────────────────────────────────
+    def test_05_hasta_getirilir(self):
+        r    = hasta_ekle("Zeynep", "Arslan", 42, "Kadın")
+        hata = hasta_getir(r["hasta_id"])
+        self.assertIsNotNone(hata)
+        self.assertEqual(hata["ad"], "Zeynep")
+
+    def test_06_isme_gore_arama(self):
+        hasta_ekle("Mehmet", "Yıldız", 60, "Erkek")
+        sonuc = hasta_ara(ad="Mehmet")
+        self.assertGreater(len(sonuc), 0)
+
+    # ── Güncelleme ─────────────────────────────────────────────
+    def test_07_hasta_guncellenir(self):
+        r    = hasta_ekle("Hasan", "Çelik", 50, "Erkek")
+        hid  = r["hasta_id"]
+        sonuc = hasta_guncelle(hid, {"telefon": "05559999999"})
+        self.assertTrue(sonuc["basarili"])
+        h = hasta_getir(hid)
+        self.assertEqual(h["telefon"], "05559999999")
+
+
+class T03_TibbiKayit(unittest.TestCase):
+    """Tıbbi bilgi kayıt testleri"""
+
+    def setUp(self):
+        self.db = baglanti_olustur()
+        temizle(self.db, "hastalar", "tibbi_bilgiler", "yasam_tarzi")
+        r = hasta_ekle("Test", "Hasta", 65, "Erkek")
+        self.hasta_id = r["hasta_id"]
+
+    def test_01_tibbi_bilgi_kaydedilir(self):
+        r = tibbi_bilgi_ekle(
+            hasta_id            = self.hasta_id,
+            doktor_id           = "DR-00001",
+            hipertansiyon       = 1,
+            kalp_hastaligi      = 0,
+            ortalama_seker      = 145.0,
+            vucut_kitle_indeksi = 28.5,
+            sikayet             = "Baş dönmesi",
         )
-        
-        guncellenmi = self.db.hastalar.find_one({"tc_no": "88888888888"})
-        self.assertEqual(guncellenmi["ad"], "Yeni")
-        self.assertEqual(guncellenmi["yas"], 41)
-        print("OK: Patient update test passed")
-    
-    def test_hasta_silme(self):
-        """Hasta kaydı silinebilir mi?"""
-        test_hasta = {
-            "hasta_no": "HS-0001",
-            "tc_no": "77777777777",
-            "ad": "Silinecek",
-            "soyad": "Hasta",
-            "yas": 35,
-            "cinsiyet": "Kadın"
-        }
-        
-        self.db.hastalar.insert_one(test_hasta)
-        self.db.hastalar.delete_one({"tc_no": "77777777777"})
-        
-        bulunan = self.db.hastalar.find_one({"tc_no": "77777777777"})
-        self.assertIsNone(bulunan, "Hasta silinemedi")
-        print("OK: Patient delete test passed")
+        self.assertTrue(r["basarili"])
+        self.assertIn("TK-", r["kayit_id"])
+
+    def test_02_gecersiz_hasta_hata(self):
+        r = tibbi_bilgi_ekle(
+            hasta_id="HS-OLMAYAN", doktor_id="DR-00001",
+            hipertansiyon=0, kalp_hastaligi=0,
+            ortalama_seker=100, vucut_kitle_indeksi=25
+        )
+        self.assertFalse(r["basarili"])
+
+    def test_03_muayene_gecmisi_getirilir(self):
+        tibbi_bilgi_ekle(
+            hasta_id=self.hasta_id, doktor_id="DR-00001",
+            hipertansiyon=0, kalp_hastaligi=0,
+            ortalama_seker=110, vucut_kitle_indeksi=24
+        )
+        kayitlar = muayene_gecmisi(self.hasta_id)
+        self.assertGreater(len(kayitlar), 0)
 
 
-class TestTibbiKayitlar(unittest.TestCase):
-    """Tıbbi kayıt işlemleri testleri"""
-    
+class T04_YasamTarzi(unittest.TestCase):
+    """Yaşam tarzı testleri"""
+
     def setUp(self):
         self.db = baglanti_olustur()
-        if self.db is not None:
-            self.db.tibbi_kayitlar.delete_many({})
-            self.db.hastalar.delete_many({})
-            
-            # Test hastası oluştur
-            test_hasta = {
-                "hasta_no": "HS-TEST",
-                "tc_no": "55555555555",
-                "ad": "Test",
-                "soyad": "Hastası",
-                "yas": 50,
-                "cinsiyet": "Erkek"
-            }
-            self.db.hastalar.insert_one(test_hasta)
-    
-    def tearDown(self):
-        if self.db is not None:
-            self.db.tibbi_kayitlar.delete_many({})
-            self.db.hastalar.delete_many({})
-            self.db.client.close()
-    
-    def test_tibbi_kayit_ekleme(self):
-        """Tıbbi kayıt eklenebilir mi?"""
-        tibbi_kayit = {
-            "kayit_no": "TK-00001",
-            "hasta_id": "HS-TEST",
-            "doktor_id": "KL-0001",
-            "kayit_tarihi": datetime.now(),
-            "ziyaret_tipi": "Rutin Kontrol",
-            "sikayet": "Baş ağrısı",
-            "tanı": "Migrenli baş ağrısı"
-        }
-        
-        sonuc = self.db.tibbi_kayitlar.insert_one(tibbi_kayit)
-        self.assertIsNotNone(sonuc.inserted_id)
-        print("OK: Medical record insert test passed")
-    
-    def test_tibbi_kayit_embedded_verisi(self):
-        """Embedded ilaç verileri saklanabilir mi?"""
-        tibbi_kayit = {
-            "kayit_no": "TK-00002",
-            "hasta_id": "HS-TEST",
-            "doktor_id": "KL-0001",
-            "kayit_tarihi": datetime.now(),
-            "ziyaret_tipi": "Rutin Kontrol",
-            "sikayet": "Göğüste ağrı",
-            "ilaç_reçetesi": [
-                {
-                    "ilaç_adi": "Aspirin",
-                    "doz": "100mg",
-                    "sıklık": "Günde 1",
-                    "süre": 30
-                }
-            ]
-        }
-        
-        self.db.tibbi_kayitlar.insert_one(tibbi_kayit)
-        bulunan = self.db.tibbi_kayitlar.find_one({"kayit_no": "TK-00002"})
-        
-        self.assertGreater(len(bulunan["ilaç_reçetesi"]), 0)
-        print("OK: Embedded record test passed")
+        temizle(self.db, "hastalar", "yasam_tarzi")
+        r = hasta_ekle("Yaşam", "Tarzi", 50, "Kadın")
+        self.hasta_id = r["hasta_id"]
+
+    def test_01_yasam_tarzi_kaydedilir(self):
+        r = yasam_tarzi_guncelle(
+            hasta_id      = self.hasta_id,
+            evli_mi       = "Evet",
+            calisma_tipi  = "Kamu",
+            ikamet_tipi   = "Kentsel",
+            sigara_durumu = "Hiç İçmedi",
+        )
+        self.assertTrue(r["basarili"])
+
+    def test_02_gecersiz_sigara_hata(self):
+        r = yasam_tarzi_guncelle(
+            hasta_id=self.hasta_id, sigara_durumu="Bazen İçiyor"
+        )
+        self.assertFalse(r["basarili"])
+
+    def test_03_upsert_calisiyor(self):
+        # İki kez çağrılınca kayıt 2 olmamalı, güncellenmeli
+        yasam_tarzi_guncelle(self.hasta_id, sigara_durumu="Halen İçiyor")
+        yasam_tarzi_guncelle(self.hasta_id, sigara_durumu="Eski İçici")
+        sayi = self.db.yasam_tarzi.count_documents({"hasta_id": self.hasta_id})
+        self.assertEqual(sayi, 1, "Upsert çalışmıyor, 2 kayıt oluştu")
 
 
-class TestRiskTahminleri(unittest.TestCase):
-    """Risk tahmin işlemleri testleri"""
-    
+class T05_RiskTahmini(unittest.TestCase):
+    """Risk tahmini kayıt testleri"""
+
     def setUp(self):
         self.db = baglanti_olustur()
-        if self.db is not None:
-            self.db.risk_tahminleri.delete_many({})
-    
-    def tearDown(self):
-        if self.db is not None:
-            self.db.risk_tahminleri.delete_many({})
-            self.db.client.close()
-    
-    def test_risk_skoru_dogrulama(self):
-        """Risk skoru 0-1 aralığında mı?"""
-        tahmin = {
-            "tahmin_no": "TP-00001",
-            "hasta_id": "HS-TEST",
-            "risk_skoru": 0.75,
-            "risk_seviyesi": "Yüksek",
-            "tahmin_tarihi": datetime.now()
-        }
-        
-        self.db.risk_tahminleri.insert_one(tahmin)
-        bulunan = self.db.risk_tahminleri.find_one({"tahmin_no": "TP-00001"})
-        
-        self.assertGreaterEqual(bulunan["risk_skoru"], 0)
-        self.assertLessEqual(bulunan["risk_skoru"], 1)
-        print("OK: Risk score validation test passed")
-    
-    def test_risk_seviyesi_kategorisi(self):
-        """Risk seviyesi geçerli mi?"""
-        geçerli_seviyeler = ["Düşük", "Orta", "Yüksek"]
-        
-        tahmin = {
-            "tahmin_no": "TP-00002",
-            "hasta_id": "HS-TEST",
-            "risk_skoru": 0.5,
-            "risk_seviyesi": "Orta",
-            "tahmin_tarihi": datetime.now()
-        }
-        
-        self.db.risk_tahminleri.insert_one(tahmin)
-        bulunan = self.db.risk_tahminleri.find_one({"tahmin_no": "TP-00002"})
-        
-        self.assertIn(bulunan["risk_seviyesi"], geçerli_seviyeler)
-        print("OK: Risk level category test passed")
-    
-    def test_yuksek_riskli_hastalar_sorgusu(self):
-        """Yüksek riskli hastalar bulunabilir mi?"""
-        # 3 tahmin ekle
-        tahminler = [
-            {"tahmin_no": "TP-01", "hasta_id": "HS-1", "risk_skoru": 0.2, "risk_seviyesi": "Düşük"},
-            {"tahmin_no": "TP-02", "hasta_id": "HS-2", "risk_skoru": 0.8, "risk_seviyesi": "Yüksek"},
-            {"tahmin_no": "TP-03", "hasta_id": "HS-3", "risk_skoru": 0.85, "risk_seviyesi": "Yüksek"},
-        ]
-        
-        for tahmin in tahminler:
-            tahmin["tahmin_tarihi"] = datetime.now()
-            self.db.risk_tahminleri.insert_one(tahmin)
-        
-        # Yüksek riskli hastaları bul
-        yuksek_riskli = list(self.db.risk_tahminleri.find({"risk_seviyesi": "Yüksek"}))
-        
-        self.assertEqual(len(yuksek_riskli), 2)
-        print("OK: High-risk patient query test passed")
+        temizle(self.db, "hastalar", "tibbi_bilgiler",
+                "yasam_tarzi", "inme_risk_tahminleri")
+        r = hasta_ekle("Risk", "Test", 70, "Erkek")
+        self.hasta_id = r["hasta_id"]
+
+    def test_01_risk_kaydedilir(self):
+        r = risk_sonucu_kaydet(
+            hasta_id        = self.hasta_id,
+            doktor_id       = "DR-00001",
+            risk_skoru      = 0.75,
+            model_girdileri = {"yas": 70, "hipertansiyon": 1},
+        )
+        self.assertTrue(r["basarili"])
+        self.assertEqual(r["risk_seviyesi"], "Yüksek")
+        self.assertEqual(r["risk_yuzdesi"],  75.0)
+        self.assertGreater(len(r["oneriler"]), 0)
+
+    def test_02_dusuk_risk(self):
+        r = risk_sonucu_kaydet(
+            hasta_id=self.hasta_id, doktor_id="DR-00001",
+            risk_skoru=0.15, model_girdileri={}
+        )
+        self.assertEqual(r["risk_seviyesi"], "Düşük")
+
+    def test_03_orta_risk(self):
+        r = risk_sonucu_kaydet(
+            hasta_id=self.hasta_id, doktor_id="DR-00001",
+            risk_skoru=0.50, model_girdileri={}
+        )
+        self.assertEqual(r["risk_seviyesi"], "Orta")
+
+    def test_04_gecersiz_skor_hata(self):
+        r = risk_sonucu_kaydet(
+            hasta_id=self.hasta_id, doktor_id="DR-00001",
+            risk_skoru=1.5, model_girdileri={}
+        )
+        self.assertFalse(r["basarili"])
+
+    def test_05_risk_gecmisi_getirilir(self):
+        risk_sonucu_kaydet(
+            hasta_id=self.hasta_id, doktor_id="DR-00001",
+            risk_skoru=0.8, model_girdileri={}
+        )
+        gecmis = hasta_risk_gecmisi(self.hasta_id)
+        self.assertGreater(len(gecmis), 0)
 
 
-class TestYasamTarzi(unittest.TestCase):
-    """Yaşam tarzı veri testleri"""
-    
+class T06_Doktor(unittest.TestCase):
+    """Doktor hesap testleri"""
+
     def setUp(self):
         self.db = baglanti_olustur()
-        if self.db is not None:
-            self.db.yasam_tarzi.delete_many({})
-    
-    def tearDown(self):
-        if self.db is not None:
-            self.db.yasam_tarzi.delete_many({})
-            self.db.client.close()
-    
-    def test_yasam_tarzi_ekleme(self):
-        """Yaşam tarzı verisi eklenebilir mi?"""
-        yasam_tarzi = {
-            "hasta_id": "HS-TEST",
-            "sigara_durumu": "Halen İçiyor",
-            "alkol_durumu": "Nadiren",
-            "egzersiz_durumu": "Haftada 1-2",
-            "beslenme_tipi": "Yüksek Tuz"
-        }
-        
-        self.db.yasam_tarzi.insert_one(yasam_tarzi)
-        bulunan = self.db.yasam_tarzi.find_one({"hasta_id": "HS-TEST"})
-        
-        self.assertIsNotNone(bulunan)
-        self.assertEqual(bulunan["sigara_durumu"], "Halen İçiyor")
-        print("OK: Lifestyle insert test passed")
-    
-    def test_sigara_kullananlari_bul(self):
-        """Sigara kullananlar bulunabilir mi?"""
-        yasam_tarzilari = [
-            {"hasta_id": "HS-1", "sigara_durumu": "Hiç İçmedi"},
-            {"hasta_id": "HS-2", "sigara_durumu": "Halen İçiyor"},
-            {"hasta_id": "HS-3", "sigara_durumu": "Halen İçiyor"},
-        ]
-        
-        self.db.yasam_tarzi.insert_many(yasam_tarzilari)
-        
-        sigara_kullananlar = list(self.db.yasam_tarzi.find({"sigara_durumu": "Halen İçiyor"}))
-        
-        self.assertEqual(len(sigara_kullananlar), 2)
-        print("OK: Smoking users query test passed")
+        temizle(self.db, "doktorlar")
+
+    def test_01_doktor_eklenir(self):
+        r = doktor_ekle(
+            "Deneme", "Doktor", "Nöroloji",
+            "deneme@test.com", "sifre123"
+        )
+        self.assertTrue(r["basarili"])
+
+    def test_02_ayni_email_hata(self):
+        doktor_ekle("A", "B", "Nöroloji", "ayni@test.com", "123")
+        r = doktor_ekle("C", "D", "Kardiyoloji", "ayni@test.com", "456")
+        self.assertFalse(r["basarili"])
+
+    def test_03_giris_basarili(self):
+        doktor_ekle("Giris", "Test", "Nöroloji", "giris@test.com", "sifre")
+        d = doktor_giris("giris@test.com", "sifre")
+        self.assertIsNotNone(d)
+        self.assertNotIn("sifre_hash", d)
+
+    def test_04_yanlis_sifre(self):
+        doktor_ekle("Yanlis", "Sifre", "Nöroloji", "yanlis@test.com", "dogru")
+        d = doktor_giris("yanlis@test.com", "yanlis")
+        self.assertIsNone(d)
 
 
-class TestIndeksler(unittest.TestCase):
-    """İndeks testleri"""
-    
-    def setUp(self):
-        self.db = baglanti_olustur()
-    
-    def tearDown(self):
-        if self.db is not None:
-            self.db.client.close()
-    
-    def test_benzersiz_indeksler(self):
-        """UNIQUE indeksler var mı?"""
-        # Hastalar koleksiyonundaki indeksleri kontrol et
-        indeksler = list(self.db.hastalar.list_indexes())
-        unique_indeksler = [i for i in indeksler if i.get("unique", False)]
-        
-        self.assertGreater(len(unique_indeksler), 0, "UNIQUE indeks bulunamadı")
-        print(f"OK: {len(unique_indeksler)} unique indexes found")
-    
-    def test_index_performance(self):
-        """İndeksler performans sağlıyor mu?"""
-        import time
-        
-        # Index yardımıyla sorgu
-        başlama = time.time()
-        sonuc = self.db.hastalar.find_one({"hasta_no": "HS-0001"})
-        index_süresi = time.time() - başlama
-        
-        self.assertLess(index_süresi, 0.1, "İndeks performansı zayıf")
-        print(f"OK: Index performance {index_süresi*1000:.2f}ms")
-
-
-class TestDataIntegrity(unittest.TestCase):
-    """Veri bütünlüğü testleri"""
-    
-    def setUp(self):
-        self.db = baglanti_olustur()
-    
-    def tearDown(self):
-        if self.db is not None:
-            self.db.client.close()
-    
-    def test_tarih_alanları_gecerli(self):
-        """Tarih alanları geçerli DateTime mi?"""
-        hasta_no = f"HS-TARIH-{uuid.uuid4().hex[:8]}"
-        tc_no = f"33333{uuid.uuid4().int % 90000 + 10000:05d}"
-        # Örnek bir hasta ekle
-        test_hasta = {
-            "hasta_no": hasta_no,
-            "tc_no": tc_no,
-            "ad": "Tarih",
-            "soyad": "Testi",
-            "yas": 50,
-            "cinsiyet": "Erkek",
-            "olusturma_tarihi": datetime.now()
-        }
-        
-        self.db.hastalar.delete_one({"hasta_no": hasta_no})
-        self.db.hastalar.insert_one(test_hasta)
-        bulunan = self.db.hastalar.find_one({"hasta_no": hasta_no})
-        
-        self.assertIsInstance(bulunan["olusturma_tarihi"], datetime)
-        self.db.hastalar.delete_one({"hasta_no": hasta_no})
-        print("OK: Date field validity test passed")
-
-
-# ============================================================================
-# TEST SUITE
-# ============================================================================
-
-def suite():
-    """Tüm testleri bir suite içinde topla"""
-    test_suite = unittest.TestSuite()
-    
-    # Sırasıyla testleri ekle
-    test_suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestDatabaseConnection))
-    test_suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestHastaVeriIsleri))
-    test_suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestTibbiKayitlar))
-    test_suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestRiskTahminleri))
-    test_suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestYasamTarzi))
-    test_suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestIndeksler))
-    test_suite.addTests(unittest.TestLoader().loadTestsFromTestCase(TestDataIntegrity))
-    
-    return test_suite
-
+# ════════════════════════════════════════════════════════════════
+# TEST RUNNER
+# ════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
-    print("\n" + "="*80)
-    print("MONGODB DATABASE UNIT TEST SUITE STARTING")
-    print("="*80 + "\n")
-    
+    print("\n" + "═" * 60)
+    print("  İNME RİSK SİSTEMİ  –  VERİTABANI BİRİM TESTLERİ")
+    print("═" * 60 + "\n")
+
+    loader = unittest.TestLoader()
+    suite  = unittest.TestSuite()
+
+    for sinif in [T01_Baglanti, T02_HastaEkleme, T03_TibbiKayit,
+                  T04_YasamTarzi, T05_RiskTahmini, T06_Doktor]:
+        suite.addTests(loader.loadTestsFromTestCase(sinif))
+
     runner = unittest.TextTestRunner(verbosity=2)
-    result = runner.run(suite())
-    
-    print("\n" + "="*80)
-    print("TEST SUMMARY")
-    print("="*80)
-    print(f"OK: Passed: {result.testsRun - len(result.failures) - len(result.errors)}")
-    print(f"FAIL: {len(result.failures)}")
-    print(f"ERROR: {len(result.errors)}")
-    print(f"TOTAL TESTS: {result.testsRun}")
-    print("="*80 + "\n")
-    
-    # Exit kodu
-    exit(0 if result.wasSuccessful() else 1)
+    sonuc  = runner.run(suite)
+
+    gecen  = sonuc.testsRun - len(sonuc.failures) - len(sonuc.errors)
+    print("\n" + "═" * 60)
+    print(f"  ✅  Geçen   : {gecen}")
+    print(f"  ❌  Başarısız: {len(sonuc.failures)}")
+    print(f"  ⚠️   Hata    : {len(sonuc.errors)}")
+    print(f"  📊  Toplam  : {sonuc.testsRun}")
+    print("═" * 60 + "\n")
+
+    sys.exit(0 if sonuc.wasSuccessful() else 1)
