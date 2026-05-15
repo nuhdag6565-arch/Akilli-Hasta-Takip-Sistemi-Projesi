@@ -1,14 +1,44 @@
-# Byte-compiled / optimized / DLL files
+# ── Python derleme dosyaları ──────────────────────────────────
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
 *.$py.class
 
-# Distribution / packaging
+# ── Sanal ortam ───────────────────────────────────────────────
 .Python
 env/
 venv/
 ENV/
+.venv/
 venv.bak/
 
-# Ignore database cache files
-database/__pycache__/
+# ── Ortam değişkenleri / GİZLİ BİLGİLER ─────────────────────
+.env
+.env.*
+*.env
+secrets.py
+config_local.py
+
+# ── IDE / Editör ──────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.user
+*.swp
+*~
+
+# ── İşletim sistemi ───────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Log ve geçici dosyalar ────────────────────────────────────
+*.log
+*.tmp
+*.bak
+
+# ── Test / Coverage ───────────────────────────────────────────
+.coverage
+htmlcov/
+.pytest_cache/
