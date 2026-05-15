@@ -13,14 +13,14 @@ from datetime import datetime
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from database.connection       import baglanti_olustur, baglanti_kapat
-from database.hasta_islemleri  import (
+from database.hasta_isimleri  import (
     hasta_ekle, tibbi_bilgi_ekle, yasam_tarzi_guncelle,
     hasta_getir, hasta_ara, muayene_gecmisi, hasta_guncelle,
 )
-from database.risk_islemleri   import (
+from database.risk_islemleri  import (
     risk_sonucu_kaydet, hasta_risk_gecmisi, risk_istatistikleri,
 )
-from database.doktor_islemleri import doktor_ekle, doktor_giris
+from database.doktor_isimleri import doktor_kayit, doktor_giris
 
 
 # ════════════════════════════════════════════════════════════════
@@ -227,34 +227,44 @@ class T05_RiskTahmini(unittest.TestCase):
 
 
 class T06_Doktor(unittest.TestCase):
-    """Doktor hesap testleri"""
+    """Doktor hesap testleri — doktor_isimleri.py API'si"""
+
+    TC1 = "10000000001"
+    TC2 = "20000000002"
+    TC3 = "30000000003"
+    TC4 = "40000000004"
 
     def setUp(self):
         self.db = baglanti_olustur()
         temizle(self.db, "doktorlar")
 
-    def test_01_doktor_eklenir(self):
-        r = doktor_ekle(
-            "Deneme", "Doktor", "Nöroloji",
-            "deneme@test.com", "sifre123"
+    def _kayit(self, tc, ad="Test", soyad="Doktor", uzm="Nöroloji", sifre="sifre123"):
+        return doktor_kayit(
+            tc_no=tc, ad=ad, soyad=soyad, uzmanlik=uzm,
+            sifre=sifre, sifre_tekrar=sifre, guvenlik_cevabi="test",
         )
-        self.assertTrue(r["basarili"])
 
-    def test_02_ayni_email_hata(self):
-        doktor_ekle("A", "B", "Nöroloji", "ayni@test.com", "123")
-        r = doktor_ekle("C", "D", "Kardiyoloji", "ayni@test.com", "456")
+    def test_01_doktor_kaydedilir(self):
+        r = self._kayit(self.TC1)
+        self.assertTrue(r["basarili"])
+        self.assertIn("doktor_id", r)
+
+    def test_02_ayni_tc_hata(self):
+        self._kayit(self.TC2)
+        r = self._kayit(self.TC2)
         self.assertFalse(r["basarili"])
 
     def test_03_giris_basarili(self):
-        doktor_ekle("Giris", "Test", "Nöroloji", "giris@test.com", "sifre")
-        d = doktor_giris("giris@test.com", "sifre")
-        self.assertIsNotNone(d)
-        self.assertNotIn("sifre_hash", d)
+        self._kayit(self.TC3, sifre="dogrusifre")
+        r = doktor_giris(tc_no=self.TC3, sifre="dogrusifre")
+        self.assertTrue(r["basarili"])
+        self.assertIn("doktor", r)
+        self.assertNotIn("sifre_hash", r["doktor"])
 
     def test_04_yanlis_sifre(self):
-        doktor_ekle("Yanlis", "Sifre", "Nöroloji", "yanlis@test.com", "dogru")
-        d = doktor_giris("yanlis@test.com", "yanlis")
-        self.assertIsNone(d)
+        self._kayit(self.TC4, sifre="dogrusifre")
+        r = doktor_giris(tc_no=self.TC4, sifre="yanlissifre")
+        self.assertFalse(r["basarili"])
 
 
 # ════════════════════════════════════════════════════════════════

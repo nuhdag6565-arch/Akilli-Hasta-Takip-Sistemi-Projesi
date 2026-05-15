@@ -8,53 +8,72 @@ Tarih    : 2026-05-08
 Version  : 3.0
 """
 
+import hashlib
 import pandas as pd
 from datetime import datetime
 import random
 from database.connection import baglanti_olustur
 from database.schema import sema_olustur
 
-# ── Kodlama → Metin eşlemeleri ─────────────────────────────────
-SIGARA  = {0: "Hiç İçmedi", 1: "Halen İçiyor", 2: "Eski İçici"}
-CALISMA = {
-    0: "Özel Sektör", 1: "Kamu",
-    2: "Serbest Meslek", 3: "Çocuk", 4: "Emekli"
-}
-EVLILIK = {0: "Hayır", 1: "Evet"}
-IKAMET  = {0: "Kırsal", 1: "Kentsel"}
-CINSIYET = {0: "Kadın", 1: "Erkek"}
 
-# ── Örnek doktorlar ────────────────────────────────────────────
+def _hashle(metin: str) -> str:
+    return hashlib.sha256(metin.strip().encode("utf-8")).hexdigest()
+
+# ── Kodlama → Metin eşlemeleri (model/train.py KATEGORIK_ESLESME ile aynı) ──
+CINSIYET = {0: "Diğer",      1: "Erkek",         2: "Kadın"}
+EVLILIK  = {0: "Hayır",      1: "Evet"}
+CALISMA  = {0: "Çalışan",   1: "Çocuk",  2: "Hükümet",  3: "İşsiz",  4: "Serbest"}
+IKAMET   = {0: "Kentsel",    1: "Kırsal"}
+SIGARA   = {0: "Eski İçici", 1: "Halen İçiyor"}
+
+# ── Örnek doktorlar (frontend SEED ile birebir eşleşir) ────────
+# Şifre: sifre123  |  Güvenlik sorusu: "Annenizin kızlık soyadı nedir?"
+_SIFRE_HASH = _hashle("sifre123")
 DOKTOR_LISTESI = [
     {
-        "doktor_id":    "DR-00001",
-        "ad":           "Fatma",
-        "soyad":        "KAYA",
-        "uzmanlik":     "Nöroloji",
-        "email":        "fatma.kaya@hastane.com",
-        "sifre_hash":   "demo_hash_1",
-        "aktif":        True,
-        "kayit_tarihi": datetime.now(),
+        "doktor_id":            "DR-00001",
+        "tc_no":                "12345678901",
+        "ad":                   "Fatma",
+        "soyad":                "KAYA",
+        "uzmanlik":             "Nöroloji",
+        "email":                "fatma.kaya@hastane.com",
+        "sifre_hash":           _SIFRE_HASH,
+        "guvenlik_sorusu":      "Annenizin kızlık soyadı nedir?",
+        "guvenlik_cevabi_hash": _hashle("yılmaz"),
+        "aktif":                True,
+        "kayit_tarihi":         datetime(2025, 1, 10),
+        "son_giris":            None,
+        "giris_sayisi":         5,
     },
     {
-        "doktor_id":    "DR-00002",
-        "ad":           "Mehmet",
-        "soyad":        "DEMİR",
-        "uzmanlik":     "Kardiyoloji",
-        "email":        "mehmet.demir@hastane.com",
-        "sifre_hash":   "demo_hash_2",
-        "aktif":        True,
-        "kayit_tarihi": datetime.now(),
+        "doktor_id":            "DR-00002",
+        "tc_no":                "98765432109",
+        "ad":                   "Mehmet",
+        "soyad":                "DEMİR",
+        "uzmanlik":             "Kardiyoloji",
+        "email":                "mehmet.demir@hastane.com",
+        "sifre_hash":           _SIFRE_HASH,
+        "guvenlik_sorusu":      "Annenizin kızlık soyadı nedir?",
+        "guvenlik_cevabi_hash": _hashle("kaya"),
+        "aktif":                True,
+        "kayit_tarihi":         datetime(2025, 2, 15),
+        "son_giris":            None,
+        "giris_sayisi":         2,
     },
     {
-        "doktor_id":    "DR-00003",
-        "ad":           "Ayşe",
-        "soyad":        "ŞAHİN",
-        "uzmanlik":     "İç Hastalıkları",
-        "email":        "ayse.sahin@hastane.com",
-        "sifre_hash":   "demo_hash_3",
-        "aktif":        True,
-        "kayit_tarihi": datetime.now(),
+        "doktor_id":            "DR-00003",
+        "tc_no":                "11122233344",
+        "ad":                   "Ayşe",
+        "soyad":                "ŞAHİN",
+        "uzmanlik":             "İç Hastalıkları",
+        "email":                "ayse.sahin@hastane.com",
+        "sifre_hash":           _SIFRE_HASH,
+        "guvenlik_sorusu":      "Annenizin kızlık soyadı nedir?",
+        "guvenlik_cevabi_hash": _hashle("demir"),
+        "aktif":                True,
+        "kayit_tarihi":         datetime(2025, 3, 20),
+        "son_giris":            None,
+        "giris_sayisi":         0,
     },
 ]
 

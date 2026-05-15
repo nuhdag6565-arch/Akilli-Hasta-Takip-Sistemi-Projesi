@@ -680,24 +680,68 @@ async function checkAPI() {
 /* ════════════════════════════════════════════════════
    GİRİŞ / ÇIKIŞ
 ════════════════════════════════════════════════════ */
-function doLogin() {
+async function doLogin() {
   const tc = document.getElementById('ltc').value.trim();
   const pw = document.getElementById('lpass').value;
   if (!tc)       { toast('TC kimlik zorunludur.',  'err'); bad('ltc');   return; }
   if (!pw)        { toast('Şifre zorunludur.',      'err'); bad('lpass'); return; }
   if (!tcOk(tc)) { toast('Geçersiz TC (11 haneli, 0 ile başlamaz).', 'err'); bad('ltc'); return; }
 
+  /* ── API ile giriş dene ── */
+  if (apiOk) {
+    try {
+      const res  = await fetch(API + '/api/doktorlar/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({tc_no: tc, password: pw}),
+        signal: AbortSignal.timeout(4000),
+      });
+      const json = await res.json();
+      if (json.durum === 'basarili') {
+        const d = json.doktor;
+        const localDoc = {
+          doktor_id:   d.doktor_id,
+          tc_no:       d.tc_no,
+          ad:          d.ad,
+          soyad:       d.soyad,
+          uzmanlik:    d.uzmanlik,
+          sifre:       pw,
+          guvenlik:    '',
+          kayit:       d.kayit_tarihi || d.kayit,
+          son_giris:   new Date().toISOString(),
+          giris_sayisi:(d.giris_sayisi || 0),
+          analiz:      0,
+          aktif:       true,
+        };
+        const docs = getD();
+        const idx = docs.findIndex(x => x.tc_no === tc);
+        if (idx >= 0) docs[idx] = {...docs[idx], ...localDoc};
+        else docs.push(localDoc);
+        setD(docs);
+        doctor = localDoc;
+        loadProfile(localDoc);
+        toast(`Hoş geldiniz, Dr. ${localDoc.ad} ${localDoc.soyad}!`, 'ok');
+        navTo('profile');
+        return;
+      }
+      /* API hata döndü (401/404) */
+      toast(json.hata || 'Giriş başarısız.', 'err');
+      if (res.status === 401) bad('lpass'); else bad('ltc');
+      return;
+    } catch { /* ağ hatası → localStorage'a düş */ }
+  }
+
+  /* ── Yerel mod (offline/API kapalı) ── */
   const docs = getD();
   const doc  = docs.find(d => d.tc_no === tc && d.aktif);
   if (!doc)          { toast('Bu TC ile aktif kayıt bulunamadı.', 'err'); bad('ltc');   return; }
   if (doc.sifre !== pw){ toast('Şifre hatalı.',                          'err'); bad('lpass'); return; }
-
   doc.son_giris    = new Date().toISOString();
   doc.giris_sayisi = (doc.giris_sayisi || 0) + 1;
   setD(docs);
   doctor = doc;
   loadProfile(doc);
-  toast(`Hoş geldiniz, Dr. ${doc.ad} ${doc.soyad}!`, 'ok');
+  toast(`Hoş geldiniz, Dr. ${doc.ad} ${doc.soyad}! (Yerel mod)`, 'ok');
   navTo('profile');
 }
 
@@ -712,7 +756,7 @@ function doLogout() {
 /* ════════════════════════════════════════════════════
    KAYIT
 ════════════════════════════════════════════════════ */
-function doRegister() {
+async function doRegister() {
   const tc  = document.getElementById('rTC').value.trim();
   const ad  = document.getElementById('rAd').value.trim();
   const soy = document.getElementById('rSoyad').value.trim();
@@ -729,22 +773,46 @@ function doRegister() {
   if (p1 !== p2)     { toast('Şifreler eşleşmiyor.',     'err'); bad('rP2');   return; }
   if (!guv)          { toast('Güvenlik cevabı zorunludur.', 'err'); bad('rGuv'); return; }
 
-  const docs = getD();
-  if (docs.find(d => d.tc_no === tc)) { toast('Bu TC ile kayıt zaten mevcut.', 'err'); bad('rTC'); return; }
-
-  const yeni = {
+  const localDoc = {
     doktor_id: nextId(), tc_no: tc,
     ad: ad[0].toUpperCase() + ad.slice(1).toLowerCase(),
     soyad: soy.toUpperCase(), uzmanlik: uzm, sifre: p1,
     guvenlik: guv.toLowerCase().trim(),
     kayit: new Date().toISOString().split('T')[0],
-    son_giris: null, giris_sayisi: 0, analiz: 0, aktif: true
+    son_giris: null, giris_sayisi: 0, analiz: 0, aktif: true,
   };
-  docs.push(yeni); setD(docs);
+
+  /* ── API ile kayıt dene ── */
+  if (apiOk) {
+    try {
+      const res  = await fetch(API + '/api/doktorlar', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          tc_no: tc, ad: localDoc.ad, soyad: localDoc.soyad,
+          uzmanlik: uzm, password: p1, guvenlik_cevabi: guv,
+        }),
+        signal: AbortSignal.timeout(4000),
+      });
+      const json = await res.json();
+      if (json.durum === 'basarili') {
+        localDoc.doktor_id = json.doktor_id || localDoc.doktor_id;
+      } else if (res.status === 409) {
+        toast('Bu TC ile kayıt zaten mevcut.', 'err'); bad('rTC'); return;
+      } else {
+        toast(json.hata || 'Kayıt başarısız.', 'err'); return;
+      }
+    } catch { /* ağ hatası → sadece localStorage'a kaydet */ }
+  }
+
+  /* ── LocalStorage'a kaydet ── */
+  const docs = getD();
+  if (docs.find(d => d.tc_no === tc)) { toast('Bu TC ile kayıt zaten mevcut.', 'err'); bad('rTC'); return; }
+  docs.push(localDoc); setD(docs);
   closeMod('mReg');
   ['rTC','rAd','rSoyad','rP1','rP2','rGuv'].forEach(i => document.getElementById(i).value='');
   document.getElementById('rUzm').value = '';
-  toast(`Hesabınız oluşturuldu (${yeni.doktor_id}). Giriş yapabilirsiniz.`, 'ok');
+  toast(`Hesabınız oluşturuldu (${localDoc.doktor_id}). Giriş yapabilirsiniz.`, 'ok');
 }
 
 /* ════════════════════════════════════════════════════

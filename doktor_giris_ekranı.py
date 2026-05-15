@@ -19,7 +19,7 @@ import streamlit as st
 from datetime import datetime
 
 # Veritabanı fonksiyonları
-from database.doktor_islemleri import (
+from database.doktor_isimleri import (
     doktor_kayit,
     doktor_giris,
     doktor_profil_getir,

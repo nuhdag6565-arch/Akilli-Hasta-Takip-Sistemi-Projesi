@@ -208,9 +208,9 @@ def tibbi_bilgi_ekle(
 def yasam_tarzi_guncelle(
     hasta_id: str,
     evli_mi: str = "Hayır",
-    calisma_tipi: str = "Özel Sektör",
+    calisma_tipi: str = "Çalışan",
     ikamet_tipi: str = "Kentsel",
-    sigara_durumu: str = "Hiç İçmedi",
+    sigara_durumu: str = "Eski İçici",
 ) -> dict:
     """
     Hastanın yaşam tarzı bilgilerini kaydeder veya günceller.
@@ -231,22 +231,20 @@ def yasam_tarzi_guncelle(
     if db is None:
         return {"basarili": False, "mesaj": "Veritabanı bağlantısı kurulamadı."}
 
-    gecerli_evlilik    = {"Evet", "Hayır", "Eski", "Hiç"}
-    gecerli_calisma    = {
-        "Özel Sektör", "Kamu", "Serbest Meslek",
-        "Emekli", "Öğrenci", "İşsiz", "Çocuk"
-    }
-    gecerli_ikamet     = {"Kentsel", "Kırsal"}
-    gecerli_sigara     = {"Hiç İçmedi", "Eski İçici", "Halen İçiyor"}
+    # Geçerli değerler model/train.py KATEGORIK_ESLESME ile aynı
+    gecerli_evlilik = {"Evet", "Hayır"}
+    gecerli_calisma = {"Çalışan", "Çocuk", "Hükümet", "İşsiz", "Serbest"}
+    gecerli_ikamet  = {"Kentsel", "Kırsal"}
+    gecerli_sigara  = {"Eski İçici", "Halen İçiyor"}
 
     if evli_mi not in gecerli_evlilik:
-        return {"basarili": False, "mesaj": f"Geçersiz evlilik durumu: {evli_mi}"}
+        return {"basarili": False, "mesaj": f"Geçersiz evlilik durumu: {evli_mi}. Geçerli: {gecerli_evlilik}"}
     if calisma_tipi not in gecerli_calisma:
-        return {"basarili": False, "mesaj": f"Geçersiz çalışma tipi: {calisma_tipi}"}
+        return {"basarili": False, "mesaj": f"Geçersiz çalışma tipi: {calisma_tipi}. Geçerli: {gecerli_calisma}"}
     if ikamet_tipi not in gecerli_ikamet:
-        return {"basarili": False, "mesaj": f"Geçersiz ikamet tipi: {ikamet_tipi}"}
+        return {"basarili": False, "mesaj": f"Geçersiz ikamet tipi: {ikamet_tipi}. Geçerli: {gecerli_ikamet}"}
     if sigara_durumu not in gecerli_sigara:
-        return {"basarili": False, "mesaj": f"Geçersiz sigara durumu: {sigara_durumu}"}
+        return {"basarili": False, "mesaj": f"Geçersiz sigara durumu: {sigara_durumu}. Geçerli: {gecerli_sigara}"}
 
     try:
         db.yasam_tarzi.update_one(

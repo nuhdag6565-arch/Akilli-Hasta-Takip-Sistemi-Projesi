@@ -1,25 +1,27 @@
-print("Sistem testi basliyor...\n")
+print("Sistem kurulum testi basliyor...\n")
 
 try:
     import pandas as pd
-    print(f"✅ Pandas calisiyor! Surum: {pd.__version__}")
-    
-    import numpy as np
-    print(f"✅ Numpy calisiyor! Surum: {np.__version__}")
-    
-    import pymongo
-    print(f"✅ PyMongo calisiyor! Surum: {pymongo.__version__}")
-    
-    import fastapi
-    print(f"✅ FastAPI calisiyor! Surum: {fastapi.__version__}")
-    
-    import sklearn
-    print(f"✅ Scikit-Learn calisiyor! Surum: {sklearn.__version__}")
-    
-    import tensorflow as tf
-    print(f"✅ TensorFlow calisiyor! Surum: {tf.__version__}")
+    print(f"OK  pandas          {pd.__version__}")
 
-    print("\n🎉 HARIKA! Tum ana kutuphaneler basariyla yuklendi ve calisiyor.")
+    import numpy as np
+    print(f"OK  numpy           {np.__version__}")
+
+    import pymongo
+    print(f"OK  pymongo         {pymongo.__version__}")
+
+    import flask
+    print(f"OK  flask           {flask.__version__}")
+
+
+    import sklearn
+    print(f"OK  scikit-learn    {sklearn.__version__}")
+
+    import imblearn
+    print(f"OK  imbalanced-learn {imblearn.__version__}")
+
+    print("\nTum bagimliliklar hazir.")
 
 except ImportError as e:
-    print(f"\n❌ HATA: Kutuphanelerden biri eksik veya hatali: {e}")
+    print(f"\nHATA: Eksik veya hatali kutuphane: {e}")
+    print("  'pip install -r requirements.txt' komutunu calistirin.")

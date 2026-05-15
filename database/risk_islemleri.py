@@ -55,14 +55,15 @@ ONERILER = {
 def _risk_seviyesi_belirle(skor: float) -> str:
     """
     Risk skorunu (0.0 – 1.0) seviyeye dönüştürür.
+    Eşikler predict.py ile aynıdır.
 
-    < 0.33  → Düşük
-    < 0.66  → Orta
-    ≥ 0.66  → Yüksek
+    < 0.10  → Düşük
+    < 0.30  → Orta
+    ≥ 0.30  → Yüksek
     """
-    if skor < 0.33:
+    if skor < 0.10:
         return "Düşük"
-    elif skor < 0.66:
+    elif skor < 0.30:
         return "Orta"
     return "Yüksek"
 
