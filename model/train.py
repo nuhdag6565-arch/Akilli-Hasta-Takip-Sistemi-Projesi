@@ -174,18 +174,19 @@ def veri_on_isle(df: pd.DataFrame) -> tuple:
             df[s].fillna(df[s].median(), inplace=True)
 
     # predict.py için encoder'ları elle oluştur
-    # (CSV verisi zaten tam sayı formatında olduğundan fit gerekmiyor)
     encoders = _encoder_olustur()
 
     hedef = "inme_durumu"
-    X = df.drop(columns=[hedef])
     y = df[hedef]
+    df = df.drop(columns=[hedef])
 
-    print(f"✅ Ön işleme tamamlandı:")
-    print(f"   Özellik sayısı : {X.shape[1]}")
-    print(f"   Eğitim örneği  : {len(X)}")
-    print(f"   Sınıf dağılımı : 0={sum(y==0)}, 1={sum(y==1)}")
-    print(f"   Encoder sayısı : {len(encoders)}")
+    X = df
+
+    print(f"On isleme tamamlandi:")
+    print(f"   Ozellik sayisi : {X.shape[1]}")
+    print(f"   Egitim ornegi  : {len(X)}")
+    print(f"   Sinif dagilimi : 0={sum(y==0)}, 1={sum(y==1)}")
+    print(f"   Encoder sayisi : {len(encoders)}")
 
     return X, y, encoders
 

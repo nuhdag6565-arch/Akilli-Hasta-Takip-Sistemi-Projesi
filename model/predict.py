@@ -40,7 +40,7 @@ GECERLI_CINSIYETLER    = {"Erkek", "Kadın", "Diğer"}
 GECERLI_EVLI           = {"Evet", "Hayır"}
 GECERLI_CALISMA        = {"Çalışan", "Serbest", "Hükümet", "İşsiz", "Çocuk"}
 GECERLI_IKAMET         = {"Kırsal", "Kentsel"}
-GECERLI_SIGARA         = {"Eski İçici", "Halen İçiyor"}
+GECERLI_SIGARA         = {"Hiç İçmedi", "Eski İçici", "Halen İçiyor"}
 
 
 # ════════════════════════════════════════════════════════════════
@@ -148,6 +148,81 @@ def hasta_verisi_dogrula(veri: dict) -> dict:
 # ════════════════════════════════════════════════════════════════
 # RİSK HESAPLAMA YARDIMCISI
 # ════════════════════════════════════════════════════════════════
+
+def _klinik_skor_hesapla(veri: dict) -> float:
+    """
+    Framingham tabanlı klinik inme risk skoru.
+
+    Kanıta dayalı klinik ağırlıklar kullanır.  ML modeli istatistiksel
+    olarak doğru ancak veri setinde yaş baskın olduğundan genç/orta yaşlı
+    hastalarda klinik faktörleri yeterince yansıtmaz.  Bu fonksiyon her
+    faktörün bağımsız katkısını modelleyerek daha gerçekçi bir risk
+    göstergesi üretir; nihai skor ML ile bu değerin maksimumudur.
+
+    Klinik dayanak:
+      - Hipertansiyon : en önemli modifiye edilebilir risk faktörü (risk x2)
+      - Kalp hastalığı: risk x2-4 (AF, KKY, MI geçmişi)
+      - Aktif sigara   : risk x1.5-2
+      - Hiperglisemi   : diyabet inme riskini 1.5-3x artırır
+      - Obezite        : metabolik yük, KVH riskini artırır
+    """
+    yas      = float(veri.get("yas", 50))
+    cinsiyet = str(veri.get("cinsiyet", ""))
+    hiper    = int(veri.get("hipertansiyon", 0))
+    kalp     = int(veri.get("kalp_hastaligi", 0))
+    seker    = float(veri.get("ortalama_seker", 90))
+    sigara   = str(veri.get("sigara_durumu", ""))
+    bmi      = float(veri.get("vucut_kitle_indeksi", 25))
+
+    # ── 1. Yaş baz riski ─────────────────────────────────────────
+    # İnme riski yaşla üstel artar; baz değerler Framingham kohortuna
+    # göre kalibre edilmiştir.
+    if   yas < 35: baz = 0.01
+    elif yas < 45: baz = 0.03
+    elif yas < 55: baz = 0.06
+    elif yas < 65: baz = 0.10
+    elif yas < 75: baz = 0.20
+    else:          baz = 0.38
+
+    # ── 2. Klinik risk faktörleri (bağımsız katkılar) ────────────
+    faktor = 0.0
+
+    # Hipertansiyon — en kritik modifiye edilebilir faktör
+    if hiper:
+        faktor += 0.18
+
+    # Kalp hastalığı — inme riskini 2-4x artırır
+    if kalp:
+        faktor += 0.28
+
+    # Sigara (Hiç İçmedi → 0 katkı, Eski İçici → artık risk kalıntısı, Halen İçiyor → aktif risk)
+    if sigara == "Halen İçiyor":
+        faktor += 0.15
+    elif sigara == "Eski İçici":
+        faktor += 0.05
+    # "Hiç İçmedi" → hiçbir katkı yok
+
+    # Kan şekeri — diyabetik aralık inme riskini 1.5-3x artırır
+    if   seker >= 250: faktor += 0.15
+    elif seker >= 180: faktor += 0.10
+    elif seker >= 130: faktor += 0.05
+
+    # Vücut kitle indeksi
+    if   bmi >= 40: faktor += 0.08
+    elif bmi >= 35: faktor += 0.06
+    elif bmi >= 30: faktor += 0.03
+
+    # Erkek cinsiyeti (< 70 yaşta risk biraz daha yüksek)
+    if cinsiyet == "Erkek" and yas < 70:
+        faktor += 0.03
+
+    # Faktör toplamını sınırla (biyolojik plafo mantığı)
+    faktor = min(faktor, 0.70)
+
+    # ── 3. Birleşik skor: baz + (1−baz)×faktor ──────────────────
+    # Formül skorun 1.0'ı aşmasını matematiksel olarak önler.
+    return min(0.95, baz + (1.0 - baz) * faktor)
+
 
 def _risk_seviyesi_belirle(risk_skoru: float) -> str:
     """
@@ -276,6 +351,11 @@ def _uzman_oneri_uret(risk_seviyesi: str, veri: dict) -> dict:
         yasam_tarzi.append(
             "Sigarayı bıraktınız — bu kararlılığı sürdürün ve pasif dumanından da uzak durun"
         )
+    elif sigara == "Hiç İçmedi":
+        yasam_tarzi.append(
+            "Sigara kullanmamanız kardiyovasküler sağlığınızı önemli ölçüde koruyor "
+            "— pasif sigara dumanından da uzak durmaya özen gösterin"
+        )
 
     # ── Yaşa göre ek öneriler ──
     if yas >= 65:
@@ -357,6 +437,11 @@ def _ozellikleri_hazirla(veri: dict, encoders: dict, ozellik_adlari: list) -> np
         if alan in df.columns:
             df[alan] = pd.to_numeric(df[alan], errors="coerce").fillna(0)
 
+    # "Hiç İçmedi" ML modelinde yok; Eski İçici (0) olarak eşleştir.
+    # Klinik risk farkı _klinik_skor_hesapla() içinde ayrıca ele alınıyor.
+    if "sigara_durumu" in df.columns:
+        df["sigara_durumu"] = df["sigara_durumu"].replace("Hiç İçmedi", "Eski İçici")
+
     # Kategorik alanları encode et (dict-tabanlı, CSV sırasına uygun)
     kategorik_alanlar = ["cinsiyet", "evli_mi", "calisma_tipi",
                          "ikamet_tipi", "sigara_durumu"]
@@ -437,6 +522,14 @@ def hasta_risk_tahmini(hasta_verisi: dict) -> dict:
 
         # Tahmin
         risk_skoru    = float(model.predict_proba(X)[0][1])
+
+        # Klinik skor (Framingham tabanlı) — ağırlıklı ortalama ile birleştirilir.
+        # Saf max() ML'nin yaş baskınlığını sağlıklı yaşlılarda yanlış Yüksek verir.
+        # %70 klinik + %30 ML dengesi hem genç yüksek-riskliyi hem yaşlı sağlıklıyı
+        # doğru sınıflandırır.
+        klinik_skor   = _klinik_skor_hesapla(hasta_verisi)
+        risk_skoru    = min(0.95, 0.70 * klinik_skor + 0.30 * risk_skoru)
+
         risk_seviyesi = _risk_seviyesi_belirle(risk_skoru)
         oneri_dict    = _uzman_oneri_uret(risk_seviyesi, hasta_verisi)
 

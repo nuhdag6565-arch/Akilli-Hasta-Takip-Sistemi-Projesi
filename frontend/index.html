@@ -462,10 +462,10 @@ html,body{height:100%;overflow:hidden;font-family:'Inter',sans-serif;background:
         <div class="fg">
           <label>Sigara Kullanım Durumu *</label>
           <select id="fSigara">
-            <option value="Eski İçici">Hiç İçmedi / Bıraktı (Eski İçici)</option>
+            <option value="Hiç İçmedi">Hiç İçmedi</option>
+            <option value="Eski İçici">Eski İçici (Bıraktı)</option>
             <option value="Halen İçiyor">Halen İçiyor</option>
           </select>
-          <span class="hint">Model iki kategori kullanır: "Eski İçici" ve "Halen İçiyor"</span>
         </div>
 
         <div style="display:flex;gap:10px;margin-top:14px">
@@ -928,8 +928,9 @@ function localScore(d) {
   else if (yas >= 40)  s += 0.07;
   if (+d.hipertansiyon  === 1) s += 0.22;
   if (+d.kalp_hastaligi === 1) s += 0.20;
-  if (d.sigara_durumu === 'Halen İçiyor') s += 0.16;
-  else                                     s += 0.05; // Eski İçici
+  if      (d.sigara_durumu === 'Halen İçiyor') s += 0.16;
+  else if (d.sigara_durumu === 'Eski İçici')  s += 0.05;
+  // 'Hiç İçmedi' → 0 katkı
   const sek = +d.ortalama_seker;
   if      (sek > 220) s += 0.14;
   else if (sek > 160) s += 0.09;
@@ -965,7 +966,8 @@ function buildRecs(skor, d) {
   if (+d.kalp_hastaligi === 1) r.push('Kalp Hastalığı: Kardiyoloji uzman takibi gereklidir.');
   if (+d.ortalama_seker > 180) r.push('Yüksek kan şekeri: Endokrinoloji (Diyabet) uzmanına başvurunuz.');
   if (+d.vucut_kitle_indeksi > 30) r.push('Obezite: Beslenme uzmanı ve İç Hastalıkları konsültasyonu önerilir.');
-  if (d.sigara_durumu === 'Halen İçiyor') r.push('Sigarayı bırakma programına yönlendirilmesi önerilir.');
+  if      (d.sigara_durumu === 'Halen İçiyor') r.push('Sigarayı bırakma programına yönlendirilmesi önerilir.');
+  else if (d.sigara_durumu === 'Eski İçici')  r.push('Sigarayı bırakmış — pasif dumana maruziyetten kaçınılmalı.');
   return r;
 }
 
@@ -1003,6 +1005,10 @@ function buildStructuredRecs(skor, d) {
   }
   if (d.sigara_durumu === 'Halen İçiyor') {
     yasam.push('Sigarayı bırakmak inme riskini yarıya indirir — ALO 171 hattı veya sigara bırakma polikliniğine başvurun');
+  } else if (d.sigara_durumu === 'Eski İçici') {
+    yasam.push('Sigarayı bırakmış olmanız riskinizi azaltıyor — pasif sigara dumanından da uzak durun');
+  } else {
+    yasam.push('Sigara kullanmamanız kardiyovasküler sağlığınızı korumaktadır — bu alışkanlığı sürdürün');
   }
   yasam.push('Haftada 150 dakika orta şiddetli aerobik egzersiz yapın (yürüyüş, yüzme, bisiklet)');
   yasam.push('Akdeniz diyeti benimseyin: bol sebze-meyve, tam tahıl, zeytinyağı, balık');
@@ -1022,7 +1028,8 @@ function buildFactors(d) {
   else if (yas >= 40) f.push({l:'Yaş (40–49)',          v:3, c:'#f59e0b'});
   if (+d.hipertansiyon  === 1) f.push({l:'Hipertansiyon',    v:8, c:'#ef4444'});
   if (+d.kalp_hastaligi === 1) f.push({l:'Kalp Hastalığı',   v:8, c:'#ef4444'});
-  if (d.sigara_durumu === 'Halen İçiyor') f.push({l:'Aktif Sigara', v:6, c:'#f59e0b'});
+  if      (d.sigara_durumu === 'Halen İçiyor') f.push({l:'Aktif Sigara',  v:6, c:'#f59e0b'});
+  else if (d.sigara_durumu === 'Eski İçici')  f.push({l:'Eski İçici',    v:2, c:'#94a3b8'});
   const sek = +d.ortalama_seker;
   if      (sek > 220) f.push({l:'Kan Şekeri (Çok Yük.)', v:7, c:'#ef4444'});
   else if (sek > 160) f.push({l:'Kan Şekeri (Yüksek)',   v:5, c:'#f59e0b'});
@@ -1099,7 +1106,7 @@ async function calcRisk() {
 
   btn.disabled = false;
   const info = rInfo(skor);
-  const pct  = Math.round(skor * 100);
+  const pct  = skor * 100;
   const facs = buildFactors(payload);
 
   document.getElementById('resultPanel').innerHTML = `
@@ -1114,7 +1121,7 @@ async function calcRisk() {
         <span class="gl" style="color:${info.c}">${info.lv}</span>
       </div>
       <div class="rb"><div class="rf" id="gBarEl" style="background:${info.c}"></div></div>
-      <div class="rl-txt" style="color:${info.c}">${info.em} ${info.lv} Risk &nbsp;·&nbsp; %${pct}</div>
+      <div class="rl-txt" style="color:${info.c}">${info.em} ${info.lv} Risk &nbsp;·&nbsp; %${pct < 1 ? pct.toFixed(1) : Math.round(pct)}</div>
     </div>
 
     ${facs.length ? `
@@ -1174,14 +1181,21 @@ async function calcRisk() {
   if (doctor) {
     const docs = getD();
     const i = docs.findIndex(d => d.tc_no === doctor.tc_no);
-    if (i > -1) { docs[i].analiz = (docs[i].analiz||0)+1; setD(docs); doctor.analiz = docs[i].analiz; }
+    if (i > -1) {
+      docs[i].analiz = (docs[i].analiz||0)+1;
+      setD(docs);
+      doctor.analiz = docs[i].analiz;
+      set('sAnaliz', doctor.analiz);
+    }
   }
 }
 
 function animScore(id, target) {
   const el = document.getElementById(id); if (!el) return;
-  let c = 0; const s = target/55;
-  const t = setInterval(()=>{ c=Math.min(c+s,target); el.textContent=Math.round(c)+'%'; if(c>=target)clearInterval(t); }, 20);
+  if (target === 0) { el.textContent = '0%'; return; }
+  const fmt = v => target < 1 ? v.toFixed(1)+'%' : Math.round(v)+'%';
+  let c = 0; const s = Math.max(target/55, 0.01);
+  const t = setInterval(()=>{ c=Math.min(c+s,target); el.textContent=fmt(c); if(c>=target)clearInterval(t); }, 20);
 }
 
 function saveRes()   { toast('Risk sonucu kaydedildi.', 'ok'); }
@@ -1195,7 +1209,7 @@ function clearRForm() {
   q('input[name="rIk"][value="Kentsel"]');
   document.getElementById('fEvli').value   = 'Evet';
   document.getElementById('fCalisma').value = 'Çalışan';
-  document.getElementById('fSigara').value  = 'Eski İçici';
+  document.getElementById('fSigara').value  = 'Hiç İçmedi';
   document.getElementById('resultPanel').innerHTML =
     '<div class="rph"><div class="rpi">🧠</div><p>Formu doldurun ve<br><strong style="color:var(--t1)">"Risk Hesapla"</strong> butonuna<br>tıklayın.</p></div>';
 }

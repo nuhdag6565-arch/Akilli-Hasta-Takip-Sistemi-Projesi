@@ -219,17 +219,25 @@ def risk_tahmini():
         if not sonuc["basarili"]:
             return jsonify({"hata": sonuc["mesaj"], "durum": "hata"}), 400
 
-        tahmin_tarihi = datetime.now().isoformat()
+        tahmin_tarihi = datetime.now()
+        toplam        = db["inme_risk_tahminleri"].count_documents({})
+        tahmin_id     = f"RT-{str(toplam + 1).zfill(5)}"
+
         tahmin_record = {
-            "hasta_id":     data.get("hasta_id"),
-            "risk_skoru":   sonuc["risk_skoru"],
-            "risk_yuzdesi": sonuc["risk_yuzdesi"],
-            "risk_seviyesi":sonuc["risk_seviyesi"],
-            "oneri":        sonuc["oneri"],
-            "tahmin_tarihi":tahmin_tarihi,
-            "input_data":   data,
+            "tahmin_id"    : tahmin_id,
+            "hasta_id"     : data.get("hasta_id", "—"),
+            "doktor_id"    : data.get("doktor_id", "—"),
+            "risk_skoru"   : float(sonuc["risk_skoru"]),
+            "risk_yuzdesi" : float(sonuc["risk_yuzdesi"]),
+            "risk_seviyesi": sonuc["risk_seviyesi"],
+            "oneriler"     : [sonuc["oneri"]],
+            "model_girdileri": data,
+            "tahmin_tarihi": tahmin_tarihi,
         }
-        db["inme_risk_tahminleri"].insert_one(tahmin_record)
+        try:
+            db["inme_risk_tahminleri"].insert_one(tahmin_record)
+        except Exception as db_err:
+            print(f"DB kayit uyarisi: {db_err}")
 
         return jsonify({
             "risk_skoru"            : sonuc["risk_skoru"],
@@ -240,7 +248,7 @@ def risk_tahmini():
             "yasam_tarzi_onerileri" : sonuc.get("yasam_tarzi_onerileri", []),
             "izleme_onerileri"      : sonuc.get("izleme_onerileri",      []),
             "aciliyet"              : sonuc.get("aciliyet",              ""),
-            "tahmin_tarihi"         : tahmin_tarihi,
+            "tahmin_tarihi"         : tahmin_tarihi.isoformat(),
             "durum"                 : "basarili",
         }), 200
 
