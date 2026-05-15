@@ -2,7 +2,38 @@
    İnme Risk Sistemi — Application Logic
    ═══════════════════════════════════════════════════ */
 
-// ── LocalStorage Database Helpers ──
+// ── API Configuration ──
+const API_URL = 'http://localhost:5000/api';
+
+// ── API Helpers ──
+async function apiCall(endpoint, method = 'GET', body = null) {
+    const options = {
+        method,
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    };
+    
+    if (body) {
+        options.body = JSON.stringify(body);
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}${endpoint}`, options);
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.hata || `API Error: ${response.status}`);
+        }
+        
+        return data;
+    } catch (error) {
+        console.error('API Error:', error);
+        throw error;
+    }
+}
+
+// ── LocalStorage Database Helpers (fallback) ──
 const DB_KEY = 'inmeRiskDoctors';
 
 function getDB() {
@@ -140,11 +171,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ── SCREEN 1: Login ──
-    document.getElementById('loginForm').addEventListener('submit', (e) => {
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const tc = document.getElementById('loginTC').value.trim();
         const password = document.getElementById('loginPassword').value;
+        const btn = document.getElementById('btnLogin');
+        const loader = btn.querySelector('.btn-loader');
+        const spans = btn.querySelectorAll('span');
 
         if (!isValidTC(tc)) {
             setInputError('loginTC');
@@ -152,41 +186,59 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const doctors = getDB();
-        const doctor = doctors.find(d => d.tc === tc);
-
-        if (!doctor) {
-            setInputError('loginTC');
-            showToast('Bu TC ile kayıtlı doktor bulunamadı.', 'error');
-            return;
-        }
-
-        if (doctor.password !== password) {
-            setInputError('loginPassword');
-            showToast('Şifre hatalı. Lütfen tekrar deneyin.', 'error');
-            return;
-        }
-
-        // Login successful
-        doctor.lastLogin = new Date().toISOString();
-        saveDB(doctors);
-        loggedInDoctor = doctor;
-
-        showToast(`Hoş geldiniz, Dr. ${doctor.name} ${doctor.surname}!`, 'success');
-        populateProfile(doctor);
-        
-        // Show loading on button briefly
-        const btn = document.getElementById('btnLogin');
-        const loader = btn.querySelector('.btn-loader');
-        const spans = btn.querySelectorAll('span');
+        // Show loading
         spans.forEach(s => s.style.display = 'none');
         loader.style.display = 'block';
 
-        setTimeout(() => {
+        try {
+            // API'ye login isteği gönder
+            const result = await apiCall('/doktorlar/login', 'POST', {
+                tc: tc,
+                password: password
+            });
+
+            if (result.durum === 'basarili') {
+                loggedInDoctor = result.doktor;
+                
+                // LocalStorage'a da kaydet (offline mod için)
+                saveDB([loggedInDoctor]);
+                
+                showToast(`Hoş geldiniz, Dr. ${result.doktor.name} ${result.doktor.surname}!`, 'success');
+                populateProfile(result.doktor);
+
+                setTimeout(() => {
+                    spans.forEach(s => s.style.display = '');
+                    loader.style.display = 'none';
+                    showScreen('screenProfile');
+                }, 800);
+            }
+        } catch (error) {
             spans.forEach(s => s.style.display = '');
             loader.style.display = 'none';
-            showScreen('screenProfile');
-        }, 800);
+            
+            if (error.message.includes('404')) {
+                setInputError('loginTC');
+                showToast('Bu TC ile kayıtlı doktor bulunamadı.', 'error');
+            } else if (error.message.includes('401')) {
+                setInputError('loginPassword');
+                showToast('Şifre hatalı. Lütfen tekrar deneyin.', 'error');
+            } else if (error.message.includes('Veritabanı')) {
+                showToast('API bağlantısı başarısız. Yerel depodan deneniyor...', 'warning');
+                // Fallback to localStorage
+                const doctors = getDB();
+                const doctor = doctors.find(d => d.tc === tc);
+                if (doctor && doctor.password === password) {
+                    loggedInDoctor = doctor;
+                    showToast(`Yerel modda: Hoş geldiniz, Dr. ${doctor.name}!`, 'success');
+                    populateProfile(doctor);
+                    showScreen('screenProfile');
+                } else {
+                    showToast('Yerel depoda doktor bulunamadı.', 'error');
+                }
+            } else {
+                showToast('Giriş başarısız: ' + error.message, 'error');
+            }
+        }
     });
 
     // ── Navigate to Register ──
@@ -206,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnBackToLogin2').addEventListener('click', () => showScreen('screenLogin'));
 
     // ── SCREEN 2: Register ──
-    document.getElementById('registerForm').addEventListener('submit', (e) => {
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const tc = document.getElementById('regTC').value.trim();
@@ -215,20 +267,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const specialty = document.getElementById('regSpecialty').value;
         const password = document.getElementById('regPassword').value;
         const passwordConfirm = document.getElementById('regPasswordConfirm').value;
-        const securityQ = document.getElementById('regSecurityQ').value;
-        const securityA = document.getElementById('regSecurityA').value.trim();
 
         // Validations
         if (!isValidTC(tc)) {
             setInputError('regTC');
             showToast('TC Kimlik Numarası 11 haneli olmalıdır.', 'error');
-            return;
-        }
-
-        const doctors = getDB();
-        if (doctors.find(d => d.tc === tc)) {
-            setInputError('regTC');
-            showToast('Bu TC ile zaten bir hesap mevcut.', 'error');
             return;
         }
 
@@ -254,34 +297,55 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (!securityQ || !securityA) {
-            showToast('Güvenlik sorusu ve cevabı zorunludur.', 'error');
-            return;
+        try {
+            // API'ye kayıt isteği gönder
+            const result = await apiCall('/doktorlar', 'POST', {
+                tc: tc,
+                name: name,
+                surname: surname,
+                specialty: specialty,
+                password: password
+            });
+
+            if (result.durum === 'basarili') {
+                showToast(`Hesabınız oluşturuldu! Doktor ID: ${result.doktor._id}`, 'success', 4000);
+                document.getElementById('registerForm').reset();
+                
+                setTimeout(() => showScreen('screenLogin'), 1200);
+            }
+        } catch (error) {
+            if (error.message.includes('409')) {
+                setInputError('regTC');
+                showToast('Bu TC ile zaten bir hesap mevcut.', 'error');
+            } else if (error.message.includes('Veritabanı')) {
+                // Fallback to localStorage
+                const doctors = getDB();
+                if (doctors.find(d => d.tc === tc)) {
+                    setInputError('regTC');
+                    showToast('Bu TC ile zaten bir hesap mevcut (yerel).', 'error');
+                    return;
+                }
+                
+                const newDoctor = {
+                    tc,
+                    name,
+                    surname,
+                    specialty,
+                    password,
+                    registeredAt: new Date().toISOString()
+                };
+                
+                doctors.push(newDoctor);
+                saveDB(doctors);
+                
+                showToast('Hesabınız yerel modda oluşturuldu.', 'success', 4000);
+                document.getElementById('registerForm').reset();
+                
+                setTimeout(() => showScreen('screenLogin'), 1200);
+            } else {
+                showToast('Kayıt başarısız: ' + error.message, 'error');
+            }
         }
-
-        // Create doctor
-        const newDoctor = {
-            id: generateDoctorId(),
-            tc,
-            name,
-            surname,
-            specialty,
-            password,
-            securityQ,
-            securityA: securityA.toLowerCase(),
-            registeredAt: new Date().toISOString(),
-            lastLogin: null
-        };
-
-        doctors.push(newDoctor);
-        saveDB(doctors);
-
-        showToast(`Hesabınız oluşturuldu! Doktor ID: ${newDoctor.id}`, 'success', 4000);
-
-        // Clear form
-        document.getElementById('registerForm').reset();
-
-        setTimeout(() => showScreen('screenLogin'), 1200);
     });
 
     // ── SCREEN 3: Forgot Password ──

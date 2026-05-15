@@ -1,324 +1,320 @@
 """
-Modül Adı: Database Schema
-Açıklama: MongoDB veritabanı koleksiyonlarının şemasını oluşturur ve optimize edilmiş indeksler tanımlar
-Sorumlu: Nuh Dağ (Veritabanı)
-Tarih: 2026-05-05
-Version: 2.0
+Modül Adı: schema.py
+Açıklama : İnme Risk Sistemi için MongoDB koleksiyonlarını,
+           JSON Schema doğrulama kurallarını ve performans
+           indekslerini oluşturur.
+Sorumlu  : Nuh Dağ (Veritabanı)
+Tarih    : 2026-05-08
+Version  : 3.0
+
+Koleksiyonlar
+─────────────
+  hastalar            → Hasta kimlik ve demografik bilgileri
+  tibbi_bilgiler      → Muayenede ölçülen klinik değerler
+  yasam_tarzi         → Sigara, egzersiz, medeni durum vb.
+  inme_risk_tahminleri→ ML modelinin ürettiği risk skoru ve öneriler
+  doktorlar           → Sistemi kullanan doktor hesapları
 """
 
 from pymongo import ASCENDING, DESCENDING
-from pymongo.errors import OperationFailure
+from pymongo.errors import OperationFailure, CollectionInvalid
 from database.connection import baglanti_olustur
 
-# ============================================================================
-# VERİTABANI ŞEMA TASARIMI
-# ============================================================================
 
-KOLEKSIYON_ŞEMALARI = {
-    "kullanicilar": {
-        "description": "Sistem kullanıcıları (Doktor, Yönetici, Teknisyen)",
-        "validators": {
-            "$jsonSchema": {
-                "bsonType": "object",
-                "required": ["kullanici_no", "ad", "soyad", "email", "rol", "aktif"],
-                "properties": {
-                    "_id": {"bsonType": "objectId"},
-                    "kullanici_no": {"bsonType": "string", "description": "Benzersiz kullanıcı ID (KL-0001)"},
-                    "ad": {"bsonType": "string", "description": "Kullanıcının adı"},
-                    "soyad": {"bsonType": "string", "description": "Kullanıcının soyadı"},
-                    "email": {"bsonType": "string", "description": "E-posta adresi"},
-                    "tc_no": {"bsonType": "string", "description": "TC kimlik numarası (opsiyonel)"},
-                    "telefon": {"bsonType": "string", "description": "Telefon numarası"},
-                    "rol": {"enum": ["doktor", "yönetici", "teknisyen", "hemşire"], "description": "Sistem rolü"},
-                    "uzmanlık_alani": {"bsonType": "string", "description": "Doktor ise uzmanlık alanı"},
-                    "departman": {"bsonType": "string", "description": "Çalıştığı departman"},
-                    "sifre_hash": {"bsonType": "string", "description": "Kullanıcı şifre hash'i"},
-                    "aktif": {"bsonType": "bool", "description": "Kullanıcı aktif mi?"},
-                    "kayit_tarihi": {"bsonType": "date", "description": "Kayıt tarihi"},
-                    "son_giris_tarihi": {"bsonType": "date", "description": "Son giriş tarihi"},
-                    "olusturma_tarihi": {"bsonType": "date", "description": "Profil oluşturma tarihi"}
-                }
-            }
-        }
-    },
-    
+# ════════════════════════════════════════════════════════════════
+# KOLEKSIYON ŞEMALARI  (JSON Schema doğrulama kuralları)
+# ════════════════════════════════════════════════════════════════
+
+SEMA = {
+
+    # ── 1. HASTALAR ──────────────────────────────────────────────
     "hastalar": {
-        "description": "Hastalar - Demografik ve temel sağlık bilgileri",
-        "validators": {
+        "validator": {
             "$jsonSchema": {
                 "bsonType": "object",
-                "required": ["hasta_no", "tc_no", "ad", "soyad", "yas", "cinsiyet"],
+                "required": ["hasta_id", "ad", "soyad", "yas", "cinsiyet"],
                 "properties": {
-                    "_id": {"bsonType": "objectId"},
-                    "hasta_no": {"bsonType": "string", "description": "Benzersiz hasta ID (HS-0001)"},
-                    "tc_no": {"bsonType": "string", "description": "TC kimlik numarası (unique)"},
-                    "ad": {"bsonType": "string", "description": "Hastanın adı"},
-                    "soyad": {"bsonType": "string", "description": "Hastanın soyadı"},
-                    "dogum_tarihi": {"bsonType": "date", "description": "Doğum tarihi"},
-                    "dogum_yili": {"bsonType": "int", "minimum": 1900, "maximum": 2100, "description": "Doğum yılı"},
-                    "yas": {"bsonType": "int", "minimum": 0, "maximum": 150, "description": "Yaş (0-150)"},
-                    "cinsiyet": {"enum": ["Erkek", "Kadın"], "description": "Cinsiyet"},
-                    "telefon": {"bsonType": "string", "description": "Telefon numarası"},
-                    "email": {"bsonType": "string", "description": "E-posta adresi"},
-                    "evli_mi": {"bsonType": "string", "description": "Medeni durum"},
-                    "calisma_tipi": {"bsonType": "string", "description": "İstihdam türü"},
-                    "ikamet_tipi": {"bsonType": "string", "description": "Yaşanılan bölge türü"},
-                    "adres": {"bsonType": "string", "description": "Ev adresi"},
-                    "sehir": {"bsonType": "string", "description": "Şehir"},
-                    "ilce": {"bsonType": "string", "description": "İlçe"},
-                    "posta_kodu": {"bsonType": "string", "description": "Posta kodu"},
-                    "acil_iletisim": {"bsonType": "string", "description": "Acil iletişim kişi"},
-                    "acil_telefon": {"bsonType": "string", "description": "Acil telefon numarası"},
-                    "kan_grubu": {"enum": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Bilinmiyor"], "description": "Kan grubu"},
-                    "sigorta_numarasi": {"bsonType": "string", "description": "Sağlık sigortası numarası"},
-                    "aktif": {"bsonType": "bool", "description": "Hasta aktif mi?"},
-                    "basvuru_tarihi": {"bsonType": "date", "description": "Başvuru tarihi"},
-                    "kayit_tarihi": {"bsonType": "date", "description": "Kayıt tarihi"},
-                    "son_ziyaret_tarihi": {"bsonType": "date", "description": "Son ziyaret tarihi"},
-                    "olusturma_tarihi": {"bsonType": "date", "description": "Sistem kaydı oluşturma tarihi"}
+                    "hasta_id":   {
+                        "bsonType": "string",
+                        "description": "Benzersiz hasta numarası  (HS-00001)"
+                    },
+                    "ad":         {"bsonType": "string"},
+                    "soyad":      {"bsonType": "string"},
+                    "yas":        {
+                        "bsonType": "int",
+                        "minimum": 0,
+                        "maximum": 130,
+                        "description": "Yaş 0-130 arasında olmalı"
+                    },
+                    "cinsiyet": {
+                        "enum": ["Erkek", "Kadın"],
+                        "description": "Sadece 'Erkek' veya 'Kadın'"
+                    },
+                    "telefon":        {"bsonType": "string"},
+                    "email":          {"bsonType": "string"},
+                    "dogum_tarihi":   {"bsonType": "string"},  # "YYYY-MM-DD"
+                    "kayit_tarihi":   {"bsonType": "date"},
+                    "aktif":          {"bsonType": "bool"},
                 }
             }
-        }
+        },
+        "validationAction": "warn"   # Kural ihlalinde hata değil uyarı ver
     },
-    
-    "tibbi_kayitlar": {
-        "description": "Tıbbi veriler - Her vizit/muayene sonuçları",
-        "validators": {
+
+    # ── 2. TIBBİ BİLGİLER ────────────────────────────────────────
+    #   Doktor muayenede bu verileri sisteme girer.
+    #   ML modeli bu koleksiyondaki değerleri kullanarak risk hesaplar.
+    "tibbi_bilgiler": {
+        "validator": {
             "$jsonSchema": {
                 "bsonType": "object",
-                "required": ["kayit_no", "hasta_id", "kayit_tarihi"],
+                "required": ["kayit_id", "hasta_id", "muayene_tarihi"],
                 "properties": {
-                    "_id": {"bsonType": "objectId"},
-                    "kayit_no": {"bsonType": "string", "description": "Benzersiz tıbbi kayıt ID (TK-0001)"},
-                    "hasta_id": {"bsonType": "string", "description": "Hasta ID referansı"},
-                    "doktor_id": {"bsonType": "string", "description": "Doktor ID referansı"},
-                    "kayit_tarihi": {"bsonType": "date", "description": "Muayene tarihi"},
-                    "ziyaret_tipi": {"enum": ["Rutin Kontrol", "Acil", "Takip", "Danışma"], "description": "Ziyaret türü"},
-                    "sikayet": {"bsonType": "string", "description": "Hasta şikayetleri"},
-                    "tanı": {"bsonType": "string", "description": "Doktor tanısı"},
-                    "hipertansiyon": {"bsonType": "bool", "description": "Hipertansiyon var mı?"},
-                    "kalp_hastaligi": {"bsonType": "bool", "description": "Kalp hastalığı var mı?"},
-                    "ortalama_seker": {"bsonType": "double", "description": "Ortalama kan şekeri seviyesi"},
-                    "vucut_kitle_indeksi": {"bsonType": "double", "description": "BMI değeri"},
-                    "ilaç_reçetesi": {
-                        "bsonType": "array",
-                        "items": {
-                            "bsonType": "object",
-                            "properties": {
-                                "ilaç_adi": {"bsonType": "string"},
-                                "doz": {"bsonType": "string"},
-                                "sıklık": {"bsonType": "string"},
-                                "süre": {"bsonType": "int"}
-                            }
-                        },
-                        "description": "Reçete edilen ilaçlar"
+                    "kayit_id":         {"bsonType": "string"},
+                    "hasta_id":         {"bsonType": "string"},
+                    "doktor_id":        {"bsonType": "string"},
+                    "muayene_tarihi":   {"bsonType": "date"},
+
+                    # ─ Klinik Ölçümler ─────────────────────────
+                    "hipertansiyon": {
+                        "bsonType": "int",
+                        "enum": [0, 1],
+                        "description": "0=Yok  1=Var"
                     },
-                    "tıbbi_testler": {
-                        "bsonType": "array",
-                        "items": {"bsonType": "string"},
-                        "description": "Önerilen tıbbi testler"
+                    "kalp_hastaligi": {
+                        "bsonType": "int",
+                        "enum": [0, 1],
+                        "description": "0=Yok  1=Var"
                     },
-                    "notlar": {"bsonType": "string", "description": "Doktor notları"},
-                    "tavsiye": {"bsonType": "string", "description": "Sağlık tavsiyesi"},
-                    "sonraki_randevu": {"bsonType": "date", "description": "Sonraki randevu tarihi"},
-                    "olusturma_tarihi": {"bsonType": "date", "description": "Kayıt oluşturma tarihi"}
+                    "ortalama_seker": {
+                        "bsonType": "double",
+                        "minimum": 0,
+                        "description": "mg/dL cinsinden ortalama kan şekeri"
+                    },
+                    "vucut_kitle_indeksi": {
+                        "bsonType": "double",
+                        "minimum": 0,
+                        "description": "BMI (kg/m²)"
+                    },
+
+                    # ─ Doktor Notları ───────────────────────────
+                    "sikayet":          {"bsonType": "string"},
+                    "tani_notu":        {"bsonType": "string"},
+                    "ilac_recetesi":    {"bsonType": "array"},
+                    "olusturma_tarihi": {"bsonType": "date"},
                 }
             }
-        }
+        },
+        "validationAction": "warn"
     },
-    
+
+    # ── 3. YAŞAM TARZI ────────────────────────────────────────────
     "yasam_tarzi": {
-        "description": "Yaşam tarzı verileri - Sigara, alkol, egzersiz, beslenme",
-        "validators": {
+        "validator": {
             "$jsonSchema": {
                 "bsonType": "object",
                 "required": ["hasta_id"],
                 "properties": {
-                    "_id": {"bsonType": "objectId"},
-                    "hasta_id": {"bsonType": "string", "description": "Hasta ID referansı"},
-                    "sigara_durumu": {"enum": ["Hiç İçmedi", "Eski İçici", "Halen İçiyor"], "description": "Sigara kullanım durumu"},
-                    "sigarayı_birakma_yili": {"bsonType": "int", "description": "Sigara bırakıldı mı? Hangi yılda?"},
-                    "gunluk_sigara": {"bsonType": "int", "description": "Günlük sigara sayısı"},
-                    "alkol_durumu": {"enum": ["Hiç", "Nadiren", "Hafta Sonu", "Düzenli"], "description": "Alkol tüketimi"},
-                    "gunluk_alkol": {"bsonType": "string", "description": "Günlük alkol tüketim miktarı"},
-                    "egzersiz_durumu": {"enum": ["Hiç", "Nadiren", "Haftada 1-2", "Haftada 3+"], "description": "Egzersiz sıklığı"},
-                    "gunluk_adim": {"bsonType": "int", "description": "Ortalama günlük adım sayısı"},
-                    "beslenme_tipi": {"enum": ["Dengeli", "Yüksek Tuz", "Yüksek Yağ", "Yüksek Şeker"], "description": "Beslenme şekli"},
-                    "gunluk_su": {"bsonType": "int", "description": "Günlük su tüketimi (ml)"},
-                    "uyku_saati": {"bsonType": "int", "description": "Günlük uyku saati"},
-                    "stres_seviyesi": {"bsonType": "int", "minimum": 1, "maximum": 10, "description": "Stres seviyesi (1-10)"},
-                    "sosyal_aktivite": {"enum": ["Çok Aktif", "Aktif", "Orta", "Pasif"], "description": "Sosyal aktivite seviyesi"},
-                    "is_stresi": {"bsonType": "bool", "description": "İş stresi yaşıyor mu?"},
-                    "guncellenme_tarihi": {"bsonType": "date", "description": "Son güncelleme tarihi"},
-                    "olusturma_tarihi": {"bsonType": "date", "description": "Kayıt oluşturma tarihi"}
-                }
-            }
-        }
-    },
-    
-    "risk_tahminleri": {
-        "description": "ML model tahminleri - İnme riski puanları",
-        "validators": {
-            "$jsonSchema": {
-                "bsonType": "object",
-                "required": ["tahmin_no", "hasta_id", "risk_skoru", "tahmin_tarihi"],
-                "properties": {
-                    "_id": {"bsonType": "objectId"},
-                    "tahmin_no": {"bsonType": "string", "description": "Benzersiz tahmin ID (TP-0001)"},
-                    "hasta_id": {"bsonType": "string", "description": "Hasta ID referansı"},
-                    "model_versiyon": {"bsonType": "string", "description": "Kullanılan model sürümü"},
-                    "risk_skoru": {"bsonType": "double", "minimum": 0.0, "maximum": 1.0, "description": "Risk puanı (0.0-1.0)"},
-                    "risk_seviyesi": {"enum": ["Düşük", "Orta", "Yüksek"], "description": "Risk kategorisi"},
-                    "tahmin_tarihi": {"bsonType": "date", "description": "Tahmin yapılan tarih"},
-                    "giriş_parametreleri": {
-                        "bsonType": "object",
-                        "description": "Modele girilen parametreler"
+                    "hasta_id": {"bsonType": "string"},
+                    "evli_mi": {
+                        "enum": ["Evet", "Hayır", "Eski", "Hiç"],
+                        "description": "Medeni durum"
                     },
-                    "oneri": {"bsonType": "string", "description": "Sistem önerisi"},
-                    "doktor_notu": {"bsonType": "string", "description": "Doktor görüşü"},
-                    "onay_durumu": {"enum": ["Beklemede", "Onaylandı", "Reddedildi"], "description": "Doktor onayı"},
-                    "olusturma_tarihi": {"bsonType": "date", "description": "Tahmin oluşturma tarihi"}
+                    "calisma_tipi": {
+                        "enum": [
+                            "Özel Sektör", "Kamu",
+                            "Serbest Meslek", "Emekli",
+                            "Öğrenci", "İşsiz", "Çocuk"
+                        ]
+                    },
+                    "ikamet_tipi": {
+                        "enum": ["Kentsel", "Kırsal"]
+                    },
+                    "sigara_durumu": {
+                        "enum": ["Hiç İçmedi", "Eski İçici", "Halen İçiyor"],
+                        "description": "Tütün kullanım durumu"
+                    },
+                    "guncelleme_tarihi": {"bsonType": "date"},
                 }
             }
-        }
+        },
+        "validationAction": "warn"
     },
-    
-    "yasam_tarzi_degisiklikleri": {
-        "description": "Yaşam tarzı değişikliklerinin loglanması (audit trail)",
-        "validators": {
+
+    # ── 4. İNME RİSK TAHMİNLERİ ──────────────────────────────────
+    #   ML modelinden gelen sonuçlar burada saklanır.
+    "inme_risk_tahminleri": {
+        "validator": {
             "$jsonSchema": {
                 "bsonType": "object",
-                "required": ["hasta_id", "degisiklik_tarihi", "degisiklik_turu"],
+                "required": [
+                    "tahmin_id", "hasta_id",
+                    "risk_skoru", "risk_seviyesi", "tahmin_tarihi"
+                ],
                 "properties": {
-                    "_id": {"bsonType": "objectId"},
-                    "hasta_id": {"bsonType": "string", "description": "Hasta ID referansı"},
-                    "degisiklik_turu": {"bsonType": "string", "description": "Ne değiştirildi?"},
-                    "eski_deger": {"bsonType": "string", "description": "Eski değer"},
-                    "yeni_deger": {"bsonType": "string", "description": "Yeni değer"},
-                    "degisiklik_tarihi": {"bsonType": "date", "description": "Değişiklik tarihi"},
-                    "dokumanlar": {"bsonType": "string", "description": "Belge adı"},
-                    "olusturma_tarihi": {"bsonType": "date", "description": "Log oluşturma tarihi"}
+                    "tahmin_id":     {"bsonType": "string"},
+                    "hasta_id":      {"bsonType": "string"},
+                    "doktor_id":     {"bsonType": "string"},
+                    "model_surumu":  {"bsonType": "string"},
+
+                    "risk_skoru": {
+                        "bsonType": "double",
+                        "minimum": 0.0,
+                        "maximum": 1.0,
+                        "description": "0.0 – 1.0 arası olasılık değeri"
+                    },
+                    "risk_seviyesi": {
+                        "enum": ["Düşük", "Orta", "Yüksek"],
+                        "description": "Düşük<0.33  Orta<0.66  Yüksek≥0.66"
+                    },
+                    "risk_yuzdesi": {
+                        "bsonType": "double",
+                        "description": "risk_skoru × 100  (örn. 75.4)"
+                    },
+
+                    # Modele giren parametrelerin anlık görüntüsü
+                    "model_girdileri": {"bsonType": "object"},
+
+                    # Doktora gösterilen öneri listesi
+                    "oneriler": {
+                        "bsonType": "array",
+                        "description": "Risk seviyesine göre yapılması gerekenler"
+                    },
+
+                    "tahmin_tarihi":   {"bsonType": "date"},
+                    "doktor_notu":     {"bsonType": "string"},
+                    "onay_durumu": {
+                        "enum": ["Beklemede", "Onaylandı", "Reddedildi"]
+                    },
                 }
             }
-        }
-    }
+        },
+        "validationAction": "warn"
+    },
+
+    # ── 5. DOKTORLAR ─────────────────────────────────────────────
+    "doktorlar": {
+        "validator": {
+            "$jsonSchema": {
+                "bsonType": "object",
+                "required": ["doktor_id", "ad", "soyad", "uzmanlik"],
+                "properties": {
+                    "doktor_id":     {"bsonType": "string"},
+                    "ad":            {"bsonType": "string"},
+                    "soyad":         {"bsonType": "string"},
+                    "uzmanlik":      {"bsonType": "string"},
+                    "email":         {"bsonType": "string"},
+                    "sifre_hash":    {"bsonType": "string"},
+                    "aktif":         {"bsonType": "bool"},
+                    "kayit_tarihi":  {"bsonType": "date"},
+                }
+            }
+        },
+        "validationAction": "warn"
+    },
 }
 
-# ============================================================================
-# İNDEKS TANIMI
-# ============================================================================
+
+# ════════════════════════════════════════════════════════════════
+# İNDEKS TANIMLARI
+# ════════════════════════════════════════════════════════════════
 
 INDEKSLER = {
-    "kullanicilar": [
-        ({"kullanici_no": ASCENDING}, {"unique": True}),
-        ({"email": ASCENDING}, {"unique": True}),
-        ({"tc_no": ASCENDING}, {}),
-        ({"rol": ASCENDING}, {}),
-        ({"aktif": ASCENDING}, {}),
-    ],
-    
     "hastalar": [
-        ({"hasta_no": ASCENDING}, {"unique": True}),
-        ({"tc_no": ASCENDING}, {"unique": True}),
-        ({"ad": ASCENDING, "soyad": ASCENDING}, {}),
-        ({"email": ASCENDING}, {}),
-        ({"aktif": ASCENDING, "kayit_tarihi": DESCENDING}, {}),
+        ([("hasta_id",   ASCENDING)], {"unique": True,  "name": "idx_hasta_id_unique"}),
+        ([("ad",         ASCENDING),
+          ("soyad",      ASCENDING)], {"name": "idx_ad_soyad"}),
+        ([("yas",        ASCENDING)], {"name": "idx_yas"}),
+        ([("kayit_tarihi", DESCENDING)], {"name": "idx_kayit_tarihi"}),
     ],
-    
-    "tibbi_kayitlar": [
-        ({"kayit_no": ASCENDING}, {"unique": True}),
-        ({"hasta_id": ASCENDING, "kayit_tarihi": DESCENDING}, {}),
-        ({"doktor_id": ASCENDING}, {}),
-        ({"kayit_tarihi": DESCENDING}, {}),
-        ({"ziyaret_tipi": ASCENDING}, {}),
+    "tibbi_bilgiler": [
+        ([("kayit_id",       ASCENDING)],  {"unique": True, "name": "idx_kayit_id_unique"}),
+        ([("hasta_id",       ASCENDING),
+          ("muayene_tarihi", DESCENDING)], {"name": "idx_hasta_muayene"}),
+        ([("doktor_id",      ASCENDING)],  {"name": "idx_doktor_id"}),
+        ([("muayene_tarihi", DESCENDING)], {"name": "idx_muayene_tarihi"}),
     ],
-    
     "yasam_tarzi": [
-        ({"hasta_id": ASCENDING}, {"unique": True}),
-        ({"guncellenme_tarihi": DESCENDING}, {}),
-        ({"sigara_durumu": ASCENDING}, {}),
-        ({"egzersiz_durumu": ASCENDING}, {}),
+        ([("hasta_id", ASCENDING)], {"unique": True, "name": "idx_yt_hasta_id_unique"}),
     ],
-    
-    "risk_tahminleri": [
-        ({"tahmin_no": ASCENDING}, {"unique": True}),
-        ({"hasta_id": ASCENDING, "tahmin_tarihi": DESCENDING}, {}),
-        ({"risk_seviyesi": ASCENDING}, {}),
-        ({"risk_skoru": DESCENDING}, {}),
-        ({"tahmin_tarihi": DESCENDING}, {}),
+    "inme_risk_tahminleri": [
+        ([("tahmin_id",    ASCENDING)],  {"unique": True, "name": "idx_tahmin_id_unique"}),
+        ([("hasta_id",    ASCENDING),
+          ("tahmin_tarihi", DESCENDING)], {"name": "idx_hasta_tahmin"}),
+        ([("risk_seviyesi", ASCENDING)], {"name": "idx_risk_seviyesi"}),
+        ([("risk_skoru",    DESCENDING)], {"name": "idx_risk_skoru"}),
+        ([("tahmin_tarihi", DESCENDING)], {"name": "idx_tahmin_tarihi"}),
     ],
-    
-    "yasam_tarzi_degisiklikleri": [
-        ({"hasta_id": ASCENDING, "degisiklik_tarihi": DESCENDING}, {}),
-        ({"degisiklik_turu": ASCENDING}, {}),
-    ]
+    "doktorlar": [
+        ([("doktor_id", ASCENDING)], {"unique": True, "name": "idx_doktor_id_unique"}),
+        ([("email",     ASCENDING)], {"unique": True, "name": "idx_doktor_email_unique"}),
+    ],
 }
 
-# ============================================================================
-# FONKSİYONLAR
-# ============================================================================
 
-def koleksiyonlari_olustur():
+# ════════════════════════════════════════════════════════════════
+# KURULUM FONKSİYONU
+# ════════════════════════════════════════════════════════════════
+
+def sema_olustur():
     """
-    Veritabanı koleksiyonlarını JSON Schema validators ile oluşturur.
-    
+    Veritabanı koleksiyonlarını ve indekslerini oluşturur.
+    Zaten varsa atlar (idempotent).
+
     Returns:
-        bool: Başarılı olup olmadığını gösterir
+        bool: Başarılıysa True, hata olursa False.
     """
     db = baglanti_olustur()
     if db is None:
-        print("ERROR: Database connection failed.")
         return False
 
-    print("Database schema creation started...\n")
-    mevcut = db.list_collection_names()
+    mevcut = set(db.list_collection_names())
+    print("\n" + "=" * 55)
+    print("  VERİTABANI ŞEMA KURULUMU BAŞLIYOR")
+    print("=" * 55)
 
-    for koleksiyon_adi, schema in KOLEKSIYON_ŞEMALARI.items():
-        if koleksiyon_adi in mevcut:
-            print(f"SKIP: {koleksiyon_adi} collection already exists.")
+    # ── Koleksiyonları oluştur ──────────────────────────────────
+    print("\n[1/2] Koleksiyonlar oluşturuluyor...")
+    for ad, ayarlar in SEMA.items():
+        if ad in mevcut:
+            print(f"  ATLA  : {ad}  (zaten var)")
             continue
-        
         try:
-            validator = schema.get("validators", {})
-            if validator:
-                db.create_collection(koleksiyon_adi, validator=validator)
-            else:
-                db.create_collection(koleksiyon_adi)
-            print(f"OK: {koleksiyon_adi} collection created.")
+            db.create_collection(ad, **ayarlar)
+            print(f"  TAMAM : {ad}  oluşturuldu")
+        except CollectionInvalid:
+            print(f"  ATLA  : {ad}  (zaten var)")
         except Exception as e:
-            print(f"ERROR: Failed to create {koleksiyon_adi}: {str(e)}")
+            print(f"  HATA  : {ad}  → {e}")
 
-    print("\n" + "="*60)
-    print("INDEXES ARE BEING CREATED...")
-    print("="*60 + "\n")
-    
-    for koleksiyon_adi, indexler in INDEKSLER.items():
-        if koleksiyon_adi not in db.list_collection_names():
-            print(f"SKIP: {koleksiyon_adi} collection not found.")
-            continue
-        
-        koleksiyon = db[koleksiyon_adi]
-        for index_spec, options in indexler:
+    # ── İndeksleri oluştur ─────────────────────────────────────
+    print("\n[2/2] İndeksler oluşturuluyor...")
+    for koleksiyon_adi, indeks_listesi in INDEKSLER.items():
+        kol = db[koleksiyon_adi]
+        for alanlar, secenekler in indeks_listesi:
             try:
-                index_adi = koleksiyon.create_index(list(index_spec.items()), **options)
-                print(f"OK: {koleksiyon_adi} index created: {index_adi}")
+                kol.create_index(alanlar, **secenekler)
+                print(f"  TAMAM : {koleksiyon_adi}.{secenekler['name']}")
             except OperationFailure as e:
-                if "already exists" not in str(e):
-                    print(f"ERROR: {koleksiyon_adi} index error: {str(e)}")
+                if "already exists" in str(e):
+                    print(f"  ATLA  : {secenekler['name']}  (zaten var)")
+                else:
+                    print(f"  HATA  : {e}")
 
-    print("\n" + "="*60)
-    print("DATABASE STATUS")
-    print("="*60)
-    print("Database Name:", db.name)
-    print(f"Total Collections: {len(db.list_collection_names())}")
-    print("Collections:")
-    for k in sorted(db.list_collection_names()):
-        koleksiyon = db[k]
-        belge_sayisi = koleksiyon.count_documents({})
-        index_sayisi = len(list(koleksiyon.list_indexes()))
-        print(f"  {k:25} | {belge_sayisi:6} documents | {index_sayisi} indexes")
-    
+    # ── Özet ───────────────────────────────────────────────────
+    print("\n" + "─" * 55)
+    print("DURUM  | KOLEKSİYON               | BELGE | İNDEKS")
+    print("─" * 55)
+    for ad in sorted(SEMA.keys()):
+        kol   = db[ad]
+        belge = kol.count_documents({})
+        indx  = len(list(kol.list_indexes()))
+        print(f"  {'✅' if ad in db.list_collection_names() else '❌'}  "
+              f"  {ad:<25}  {belge:>5}  {indx:>6}")
+    print("─" * 55)
+    print("Şema kurulumu tamamlandı.\n")
     return True
 
+
 if __name__ == "__main__":
-    koleksiyonlari_olustur()
+    sema_olustur()

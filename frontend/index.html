@@ -1,403 +1,1187 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="İnme Risk Tahmin Sistemi - Doktor Girişi ve Yönetim Paneli. Yapay zeka destekli inme riski değerlendirmesi.">
-    <title>🧠 İnme Risk Sistemi — Doktor Paneli</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>İnme Risk Analiz Sistemi</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0e1a;--bg2:#111827;--bg3:#1a2235;
+  --card:rgba(17,24,39,0.92);--border:rgba(99,102,241,0.18);
+  --accent:#6366f1;--accent2:#a855f7;
+  --t1:#f1f5f9;--t2:#94a3b8;--t3:#64748b;
+  --green:#22c55e;--yellow:#f59e0b;--red:#ef4444;
+  --grad:linear-gradient(135deg,#6366f1,#a855f7);
+  --grad2:linear-gradient(135deg,#06b6d4,#6366f1);
+  --grad3:linear-gradient(135deg,#22c55e,#14b8a6);
+  --r:10px;--rl:18px;--sh:0 20px 60px rgba(0,0,0,.5);
+}
+html,body{height:100%;overflow:hidden;font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);font-size:.9rem}
+.hidden{display:none!important}
+.w100{width:100%}
+
+/* ── PAGE TRANSITION OVERLAY ── */
+#pageOverlay{
+  position:fixed;inset:0;background:var(--bg);z-index:9990;
+  opacity:0;pointer-events:none;transition:opacity .2s ease;
+}
+#pageOverlay.show{opacity:1;pointer-events:all}
+
+/* ── PAGES — her sayfa kendi bağımsız viewport'u ── */
+.pg{
+  position:fixed;top:0;left:0;
+  width:100%;height:100%;
+  overflow-y:auto;overflow-x:hidden;
+  background:var(--bg);
+  display:none;
+  z-index:1;   /* modaller (8000) her zaman üstte kalır */
+}
+.pg.active{
+  display:block;
+  animation:pgIn .32s cubic-bezier(.22,1,.36,1);
+}
+@keyframes pgIn{from{opacity:0}to{opacity:1}}
+
+/* ── TOAST ── */
+#toast-box{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.tk{min-width:270px;padding:12px 16px;border-radius:var(--r);background:var(--bg2);border-left:4px solid var(--accent);color:var(--t1);display:flex;align-items:center;gap:9px;animation:tkIn .28s ease-out;box-shadow:var(--sh);font-size:.82rem;pointer-events:auto}
+.tk.ok{border-color:var(--green)}.tk.err{border-color:var(--red)}.tk.warn{border-color:var(--yellow)}
+.tk.out{animation:tkOut .25s ease-in forwards}
+@keyframes tkIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes tkOut{to{transform:translateX(110%);opacity:0}}
+
+/* ── FORM ATOMS ── */
+.fg{margin-bottom:14px;text-align:left}
+.fg label{display:block;font-size:.68rem;color:var(--t2);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.6px}
+.fg input,.fg select{width:100%;padding:10px 13px;background:rgba(30,41,59,.55);border:1.5px solid rgba(99,102,241,.2);border-radius:var(--r);color:var(--t1);font-size:.87rem;font-family:inherit;outline:none;transition:border .2s,box-shadow .2s;-webkit-appearance:none;appearance:none}
+.fg input:focus,.fg select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+.fg select option{background:#1a2235}
+.fg input.bad{border-color:var(--red)!important;animation:sh .35s}
+@keyframes sh{0%,100%{transform:translateX(0)}30%{transform:translateX(-5px)}70%{transform:translateX(5px)}}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.pw{position:relative}.pw input{padding-right:40px}
+.eye-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.9rem;opacity:.5;padding:2px;color:var(--t2)}
+.eye-btn:hover{opacity:.9}
+.rdg{display:flex;gap:8px;padding-top:6px}
+.rdg input[type=radio]{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
+.rdg label{padding:7px 22px;border-radius:20px;cursor:pointer;font-size:.84rem;border:1.5px solid rgba(99,102,241,.35);color:var(--t2);transition:all .2s;font-weight:500;text-transform:none;letter-spacing:0;display:inline-flex;align-items:center}
+.rdg label:has(input:checked){background:var(--grad);border-color:transparent;color:#fff;box-shadow:0 4px 14px rgba(99,102,241,.35)}
+.hint{font-size:.69rem;color:var(--t3);margin-top:3px;display:block}
+.sep{border:none;border-top:1px solid var(--border);margin:18px 0}
+
+/* ── BUTTONS ── */
+.btn{border:none;border-radius:var(--r);cursor:pointer;font-family:inherit;font-weight:600;transition:transform .15s,box-shadow .2s,opacity .2s;font-size:.86rem;display:inline-flex;align-items:center;gap:6px;justify-content:center}
+.btn:disabled{opacity:.5;pointer-events:none}
+.bp{background:var(--grad);color:#fff;padding:12px 26px}
+.bp:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(99,102,241,.35)}
+.bs{background:transparent;border:1.5px solid var(--border);color:var(--t1);padding:11px 22px}
+.bs:hover{border-color:var(--accent);background:rgba(99,102,241,.07)}
+.bg_{background:none;border:none;color:var(--t2);padding:8px 14px;cursor:pointer;font-size:.82rem;font-family:inherit;font-weight:500}
+.bg_:hover{color:var(--t1)}
+.bsm{padding:8px 18px;font-size:.8rem}
+.bxs{padding:5px 12px;font-size:.75rem;border-radius:6px}
+
+/* ── MODAL ── */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:8000;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.ov.open{display:flex;animation:ovIn .2s ease}
+@keyframes ovIn{from{opacity:0}to{opacity:1}}
+.mc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);width:90%;max-width:500px;max-height:93vh;overflow-y:auto;animation:mcIn .28s cubic-bezier(.34,1.56,.64,1);box-shadow:var(--sh)}
+.mc.mlg{max-width:660px}
+@keyframes mcIn{from{opacity:0;transform:scale(.91)}to{opacity:1;transform:scale(1)}}
+.mh{display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg2);z-index:2}
+.mh h3{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.mx{background:none;border:none;color:var(--t3);font-size:1.5rem;cursor:pointer;line-height:1;padding:0 2px}.mx:hover{color:var(--t1)}
+.mb{padding:20px 22px}.mb h4{color:var(--accent);font-size:.72rem;text-transform:uppercase;letter-spacing:.7px;margin:16px 0 10px;display:flex;align-items:center;gap:6px}
+.mb h4:first-child{margin-top:0}
+.mf{display:flex;justify-content:flex-end;gap:10px;padding:14px 22px;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--bg2)}
+
+/* ── STEPS (forgot pass) ── */
+.stps{display:flex;align-items:center;gap:8px;margin-bottom:20px}
+.sd{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;border:2px solid var(--border);color:var(--t3);flex-shrink:0}
+.sd.on{background:var(--grad);border-color:transparent;color:#fff}
+.sd.dn{background:var(--green);border-color:transparent;color:#fff}
+.sl{flex:1;height:1px;background:var(--border)}
+.sqb{background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.18);border-radius:var(--r);padding:12px 15px;margin-bottom:12px;font-size:.82rem;color:var(--t2);line-height:1.6}
+
+/* ═══════════════════════════════════════════
+   PAGE 1 — GİRİŞ
+═══════════════════════════════════════════ */
+/* login sayfası — .pg'den position:fixed miras alır, sadece içerik flex hizalaması */
+#pg-login{align-items:center;justify-content:center}
+#pg-login.active{display:flex}
+#pCvs{position:absolute;inset:0;pointer-events:none;z-index:0}
+.lc{position:relative;z-index:1;background:rgba(15,20,35,.9);backdrop-filter:blur(24px);border:1px solid rgba(99,102,241,.22);border-radius:var(--rl);padding:44px 40px;width:100%;max-width:420px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.55)}
+.llogo{display:flex;justify-content:center;margin-bottom:14px}
+.ltit{font-size:1.85rem;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.3px;margin-bottom:5px}
+.lsub{color:var(--t2);font-size:.8rem;margin-bottom:30px;line-height:1.5}
+.ldiv{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--t3);font-size:.74rem}
+.ldiv::before,.ldiv::after{content:'';flex:1;height:1px;background:var(--border)}
+.lbtns{display:flex;gap:10px}
+.lbtns>*{flex:1}
+
+/* ═══════════════════════════════════════════
+   PAGE 2 — DOKTOR PROFİLİ
+═══════════════════════════════════════════ */
+#pg-profile{background:var(--bg)}
+.tbar{display:flex;align-items:center;justify-content:space-between;padding:0 30px;height:58px;background:rgba(8,12,26,.97);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.tbrand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:.92rem;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.tacts{display:flex;align-items:center;gap:10px}
+.tdoc{font-size:.8rem;color:var(--t2)}
+.api-dot{display:inline-flex;align-items:center;gap:5px;font-size:.69rem;padding:3px 9px;border-radius:12px;font-weight:600}
+.api-on{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.22)}
+.api-off{background:rgba(239,68,68,.08);color:#f87171;border:1px solid rgba(239,68,68,.18)}
+
+.pw2{max-width:920px;margin:0 auto;padding:36px 22px}
+
+/* Hero */
+.hero{background:linear-gradient(135deg,rgba(99,102,241,.1),rgba(168,85,247,.06));border:1px solid rgba(99,102,241,.22);border-radius:var(--rl);padding:38px 44px;display:flex;align-items:center;gap:36px;margin-bottom:22px;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;top:-80px;right:-80px;width:240px;height:240px;background:radial-gradient(circle,rgba(99,102,241,.15),transparent 70%);pointer-events:none}
+.hav{width:92px;height:92px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:900;color:#fff;flex-shrink:0;box-shadow:0 8px 28px rgba(99,102,241,.4);letter-spacing:-1px}
+.hinfo h1{font-size:1.85rem;font-weight:800;letter-spacing:-.3px;margin:6px 0}
+.hbadge{display:inline-flex;align-items:center;gap:6px;background:rgba(99,102,241,.14);border:1px solid rgba(99,102,241,.28);border-radius:20px;padding:4px 13px;font-size:.78rem;font-weight:600;color:#a5b4fc;margin-bottom:8px}
+.hwelcome{color:var(--t2);font-size:.84rem;line-height:1.7}
+
+/* Stats */
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;text-align:center}
+.sc .n{font-size:1.75rem;font-weight:800;display:block;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sc .l{font-size:.7rem;color:var(--t2);margin-top:2px;display:block;text-transform:uppercase;letter-spacing:.5px}
+
+/* Info cards */
+.ig{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px}
+.ic{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;transition:border-color .2s,transform .2s;cursor:default}
+.ic:hover{border-color:rgba(99,102,241,.38);transform:translateY(-2px)}
+.ic .ii{font-size:1.3rem;margin-bottom:9px}
+.ic .il{font-size:.67rem;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
+.ic .iv{font-size:.92rem;font-weight:700}
+
+/* CTA */
+.cta{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);padding:28px 36px;text-align:center}
+.cta h3{font-size:1.1rem;margin-bottom:6px}
+.cta p{color:var(--t2);font-size:.82rem;margin-bottom:20px;line-height:1.6}
+.ctab{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+/* ═══════════════════════════════════════════
+   PAGE 3 — RİSK ANALİZİ
+═══════════════════════════════════════════ */
+#pg-risk{background:var(--bg)}
+.rw{max-width:1100px;margin:0 auto;padding:28px 22px}
+.rh{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;gap:12px;flex-wrap:wrap}
+.rh h2{font-size:1.25rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.rh-sub{font-size:.76rem;color:var(--t2);margin-top:3px}
+
+.rl{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+
+/* Form panel */
+.fp{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);padding:26px;backdrop-filter:blur(16px)}
+.pt{font-size:.7rem;color:var(--t3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.pt::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Result panel */
+.rp{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);padding:26px;backdrop-filter:blur(16px);min-height:500px;display:flex;align-items:center;justify-content:center}
+.rph{text-align:center;color:var(--t3)}
+.rph .rpi{font-size:3.2rem;margin-bottom:14px;opacity:.55}
+.rph p{font-size:.85rem;line-height:1.9;color:var(--t2)}
+
+/* Gauge */
+.gw{text-align:center;margin-bottom:20px}
+.gauge{width:172px;height:172px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;flex-direction:column;border:7px solid}
+.gauge .gs{font-size:2.2rem;font-weight:900;display:block;line-height:1.1}
+.gauge .gl{font-size:.8rem;font-weight:700;margin-top:5px;display:block;text-transform:uppercase;letter-spacing:.5px}
+.rb{height:11px;background:rgba(255,255,255,.07);border-radius:6px;overflow:hidden;margin:10px 0}
+.rf{height:100%;border-radius:6px;transition:width 1.2s cubic-bezier(.22,1,.36,1);width:0}
+.rl-txt{text-align:center;font-size:.9rem;font-weight:600;margin-bottom:18px}
+
+/* Factors */
+.fl{margin-bottom:18px}
+.ft{font-size:.69rem;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.ft::after{content:'';flex:1;height:1px;background:var(--border)}
+.fac{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:.77rem}
+.fl_{min-width:144px;color:var(--t2)}
+.fb{flex:1;height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden}
+.ff{height:100%;border-radius:3px;transition:width .75s cubic-bezier(.22,1,.36,1);width:0}
+.fn{min-width:26px;text-align:right;color:var(--t3)}
+
+/* Recs */
+.rec-box{background:rgba(99,102,241,.05);border:1px solid rgba(99,102,241,.14);border-radius:var(--r);padding:14px 16px;margin-bottom:18px}
+.rt{font-size:.69rem;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:9px}
+.ri{display:flex;align-items:flex-start;gap:7px;font-size:.79rem;color:var(--t2);margin-bottom:6px;line-height:1.5}
+.ri::before{content:'›';color:var(--accent);font-weight:800;flex-shrink:0}
+.ract{display:flex;gap:10px;justify-content:center;margin-top:6px}
+/* Doktor kartları & yaşam tarzı önerileri */
+.rec-section{margin-bottom:14px}
+.rec-sec-title{font-size:.69rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.rec-sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.doc-cards{display:flex;flex-direction:column;gap:7px}
+.doc-card{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:flex-start;gap:11px}
+.doc-badge{padding:3px 9px;border-radius:20px;font-size:.68rem;font-weight:700;color:#fff;white-space:nowrap;flex-shrink:0;margin-top:2px}
+.doc-badge.acil{background:#ef4444}.doc-badge.oncelikli{background:#f59e0b}.doc-badge.rutin{background:#22c55e}
+.doc-name{font-weight:600;font-size:.84rem;color:var(--t1);margin-bottom:2px}
+.doc-why{font-size:.75rem;color:var(--t2);line-height:1.4}
+.tip-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+.tip-item{display:flex;gap:8px;align-items:flex-start;font-size:.79rem;color:var(--t2);line-height:1.45}
+.tip-icon{font-size:.85rem;flex-shrink:0;margin-top:.15rem}
+
+/* Field section divider */
+.sec-head{display:flex;align-items:center;gap:10px;margin:18px 0 14px;font-size:.72rem;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.7px}
+.sec-head::after{content:'';flex:1;height:1px;background:rgba(99,102,241,.2)}
+
+/* ── responsive ── */
+@media(max-width:860px){
+  .rl{grid-template-columns:1fr}
+  .ig{grid-template-columns:1fr 1fr}
+  .hero{flex-direction:column;text-align:center;padding:28px 20px;gap:20px}
+  .sg{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:600px){
+  .row2,.row3{grid-template-columns:1fr}
+  .ig{grid-template-columns:1fr}
+  .sg{grid-template-columns:1fr}
+  .lc{margin:12px;padding:30px 18px}
+  .pw2,.rw{padding:18px 12px}
+  .tbar{padding:0 14px}
+  .ctab{flex-direction:column}
+  .ctab .btn{width:100%}
+  .hinfo h1{font-size:1.45rem}
+}
+</style>
 </head>
 <body>
-    <!-- Animated Background Particles -->
-    <div class="bg-particles" id="bgParticles"></div>
 
-    <!-- ════════════════════════════════════════════ -->
-    <!-- EKRAN 1 — GİRİŞ                            -->
-    <!-- ════════════════════════════════════════════ -->
-    <div class="screen active" id="screenLogin">
-        <div class="card card-login">
-            <div class="card-glow"></div>
-            <div class="card-header">
-                <div class="logo-icon">
-                    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                        <circle cx="24" cy="24" r="22" stroke="url(#logoGrad)" stroke-width="2.5" fill="none"/>
-                        <path d="M24 10C18 10 14 15 14 20C14 26 18 28 20 32C21 34 22 38 24 38C26 38 27 34 28 32C30 28 34 26 34 20C34 15 30 10 24 10Z" fill="url(#logoGrad)" opacity="0.9"/>
-                        <path d="M20 22C20 22 22 26 24 26C26 26 28 22 28 22" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-                        <circle cx="20" cy="19" r="1.5" fill="white"/>
-                        <circle cx="28" cy="19" r="1.5" fill="white"/>
-                        <defs>
-                            <linearGradient id="logoGrad" x1="0" y1="0" x2="48" y2="48">
-                                <stop offset="0%" stop-color="#6366f1"/>
-                                <stop offset="100%" stop-color="#a855f7"/>
-                            </linearGradient>
-                        </defs>
-                    </svg>
-                </div>
-                <h1 class="app-title">İnme Risk Sistemi</h1>
-                <p class="app-subtitle">Doktor Girişi</p>
-            </div>
+<!-- Page transition overlay -->
+<div id="pageOverlay"></div>
+<div id="toast-box"></div>
 
-            <form id="loginForm" class="card-body" autocomplete="off">
-                <div class="input-group">
-                    <label for="loginTC">TC Kimlik Numarası</label>
-                    <div class="input-wrapper">
-                        <span class="input-icon">🪪</span>
-                        <input type="text" id="loginTC" maxlength="11" pattern="\d{11}" placeholder="11 haneli TC numaranız" required>
-                    </div>
-                </div>
+<!-- ═══════════════════════════════════════════════════════════
+     SAYFA 1 — GİRİŞ
+═══════════════════════════════════════════════════════════ -->
+<div id="pg-login" class="pg active">
+  <canvas id="pCvs"></canvas>
+  <div class="lc">
+    <div class="llogo">
+      <svg viewBox="0 0 64 64" width="56" height="56">
+        <defs>
+          <linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#a855f7"/></linearGradient>
+          <linearGradient id="lg2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#818cf8"/><stop offset="100%" stop-color="#c084fc"/></linearGradient>
+        </defs>
+        <path d="M32 5C17 5 7 17 7 31c0 11 6 20 15 24l2-5c-7-4-11-11-11-19C13 19 21 11 32 11s19 8 19 20c0 8-4 15-11 19l2 5c9-4 15-13 15-24C57 17 47 5 32 5z" fill="url(#lg1)"/>
+        <path d="M32 17c-8 0-14 6-14 14s6 14 14 14 14-6 14-14-6-14-14-14zm0 4a10 10 0 0 1 7.1 2.9l-7.1 7.1-7.1-7.1A10 10 0 0 1 32 21z" fill="url(#lg2)" opacity=".85"/>
+        <rect x="28" y="38" width="8" height="14" rx="3" fill="url(#lg1)" opacity=".65"/>
+      </svg>
+    </div>
+    <div class="ltit">İnme Risk Sistemi</div>
+    <div class="lsub">Yapay Zeka Destekli Hasta Takip &amp; Risk Analiz Platformu</div>
 
-                <div class="input-group">
-                    <label for="loginPassword">Şifre</label>
-                    <div class="input-wrapper">
-                        <span class="input-icon">🔒</span>
-                        <input type="password" id="loginPassword" placeholder="Şifrenizi girin" required>
-                        <button type="button" class="toggle-password" data-target="loginPassword" aria-label="Şifreyi göster/gizle">
-                            <span class="eye-icon">👁️</span>
-                        </button>
-                    </div>
-                </div>
+    <div class="fg">
+      <label>TC Kimlik Numarası</label>
+      <input type="text" id="ltc" placeholder="11 haneli TC numaranız" maxlength="11" autocomplete="username" inputmode="numeric">
+    </div>
+    <div class="fg">
+      <label>Şifre</label>
+      <div class="pw">
+        <input type="password" id="lpass" placeholder="••••••••" autocomplete="current-password">
+        <button class="eye-btn" type="button" onclick="togEye('lpass',this)">👁</button>
+      </div>
+    </div>
+    <button class="btn bp w100" onclick="doLogin()">Giriş Yap</button>
+    <div class="ldiv">veya</div>
+    <div class="lbtns">
+      <button class="btn bs" onclick="openMod('mReg')">📋 Kayıt Ol</button>
+      <button class="bg_" onclick="openForgot()">Şifremi Unuttum</button>
+    </div>
+  </div>
+</div>
 
-                <button type="submit" class="btn btn-primary btn-full" id="btnLogin">
-                    <span class="btn-icon">🔐</span>
-                    <span>Giriş Yap</span>
-                    <div class="btn-loader" style="display:none;"></div>
-                </button>
+<!-- ═══════════════════════════════════════════════════════════
+     SAYFA 2 — DOKTOR PROFİLİ
+═══════════════════════════════════════════════════════════ -->
+<div id="pg-profile" class="pg">
+  <nav class="tbar">
+    <div class="tbrand"><span>🧠</span><span>İnme Risk Sistemi</span></div>
+    <div class="tacts">
+      <span class="tdoc" id="navDoc"></span>
+      <span class="api-dot api-off" id="apiBadge">● Yerel</span>
+      <button class="btn bs bxs" onclick="navRisk()">Risk Analizi →</button>
+      <button class="btn bs bxs" onclick="doLogout()">Çıkış</button>
+    </div>
+  </nav>
 
-                <div class="divider">
-                    <span>veya</span>
-                </div>
-
-                <div class="btn-row">
-                    <button type="button" class="btn btn-outline" id="btnGoRegister">
-                        <span class="btn-icon">📋</span>
-                        <span>Kayıt Ol</span>
-                    </button>
-                    <button type="button" class="btn btn-ghost" id="btnGoForgot">
-                        <span class="btn-icon">🔓</span>
-                        <span>Şifremi Unuttum</span>
-                    </button>
-                </div>
-            </form>
-        </div>
+  <div class="pw2">
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hav" id="hAv">?</div>
+      <div class="hinfo">
+        <div class="hbadge" id="hBadge">🩺 — Uzmanı</div>
+        <h1 id="hName">Dr. —</h1>
+        <div class="hwelcome" id="hWel">Sisteme hoş geldiniz.</div>
+        <div style="font-size:.74rem;color:var(--t3);margin-top:5px" id="hLast"></div>
+      </div>
     </div>
 
-    <!-- ════════════════════════════════════════════ -->
-    <!-- EKRAN 2 — KAYIT OL                         -->
-    <!-- ════════════════════════════════════════════ -->
-    <div class="screen" id="screenRegister">
-        <div class="card card-register">
-            <div class="card-glow"></div>
-            <div class="card-header">
-                <div class="logo-icon small">
-                    <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
-                        <circle cx="24" cy="24" r="22" stroke="url(#logoGrad2)" stroke-width="2.5" fill="none"/>
-                        <path d="M24 10C18 10 14 15 14 20C14 26 18 28 20 32C21 34 22 38 24 38C26 38 27 34 28 32C30 28 34 26 34 20C34 15 30 10 24 10Z" fill="url(#logoGrad2)" opacity="0.9"/>
-                        <defs>
-                            <linearGradient id="logoGrad2" x1="0" y1="0" x2="48" y2="48">
-                                <stop offset="0%" stop-color="#6366f1"/>
-                                <stop offset="100%" stop-color="#a855f7"/>
-                            </linearGradient>
-                        </defs>
-                    </svg>
-                </div>
-                <h1 class="app-title">Hesap Oluştur</h1>
-                <p class="app-subtitle">Sisteme ilk kez mi katılıyorsunuz?</p>
-            </div>
-
-            <form id="registerForm" class="card-body" autocomplete="off">
-                <div class="input-row">
-                    <div class="input-group">
-                        <label for="regTC">TC Kimlik No</label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">🪪</span>
-                            <input type="text" id="regTC" maxlength="11" pattern="\d{11}" placeholder="TC No" required>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="input-row">
-                    <div class="input-group">
-                        <label for="regName">Ad</label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">👤</span>
-                            <input type="text" id="regName" placeholder="Adınız" required>
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label for="regSurname">Soyad</label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">👤</span>
-                            <input type="text" id="regSurname" placeholder="Soyadınız" required>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label for="regSpecialty">Uzmanlık Alanı</label>
-                    <div class="input-wrapper">
-                        <span class="input-icon">🩺</span>
-                        <select id="regSpecialty" required>
-                            <option value="" disabled selected>Uzmanlık seçin</option>
-                            <option value="Nöroloji">Nöroloji</option>
-                            <option value="Kardiyoloji">Kardiyoloji</option>
-                            <option value="Dahiliye">Dahiliye</option>
-                            <option value="Acil Tıp">Acil Tıp</option>
-                            <option value="Fizik Tedavi">Fizik Tedavi ve Rehabilitasyon</option>
-                            <option value="Nöroşirürji">Nöroşirürji</option>
-                            <option value="Radyoloji">Radyoloji</option>
-                            <option value="Aile Hekimliği">Aile Hekimliği</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="input-row">
-                    <div class="input-group">
-                        <label for="regPassword">Şifre</label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">🔒</span>
-                            <input type="password" id="regPassword" placeholder="Min 6 karakter" minlength="6" required>
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label for="regPasswordConfirm">Şifre Tekrar</label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">🔒</span>
-                            <input type="password" id="regPasswordConfirm" placeholder="Tekrar girin" minlength="6" required>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label for="regSecurityQ">Güvenlik Sorusu</label>
-                    <div class="input-wrapper">
-                        <span class="input-icon">❓</span>
-                        <select id="regSecurityQ" required>
-                            <option value="" disabled selected>Bir soru seçin</option>
-                            <option value="anne">Annenizin kızlık soyadı nedir?</option>
-                            <option value="okul">İlkokul adınız nedir?</option>
-                            <option value="sehir">Doğduğunuz şehir neresidir?</option>
-                            <option value="hayvan">İlk evcil hayvanınızın adı nedir?</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label for="regSecurityA">Güvenlik Sorusu Cevabı</label>
-                    <div class="input-wrapper">
-                        <span class="input-icon">💬</span>
-                        <input type="text" id="regSecurityA" placeholder="Cevabınız" required>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-success btn-full" id="btnRegister">
-                    <span class="btn-icon">✅</span>
-                    <span>Hesap Oluştur</span>
-                </button>
-
-                <button type="button" class="btn btn-link" id="btnBackToLogin1">
-                    <span>← Giriş Ekranına Dön</span>
-                </button>
-            </form>
-        </div>
+    <!-- STATS -->
+    <div class="sg">
+      <div class="sc"><span class="n" id="sAnaliz">0</span><span class="l">Toplam Analiz</span></div>
+      <div class="sc"><span class="n" id="sGiris">0</span><span class="l">Toplam Giriş</span></div>
+      <div class="sc"><span class="n" id="sKayit">—</span><span class="l">Kayıt Tarihi</span></div>
     </div>
 
-    <!-- ════════════════════════════════════════════ -->
-    <!-- EKRAN 3 — ŞİFREMİ UNUTTUM                  -->
-    <!-- ════════════════════════════════════════════ -->
-    <div class="screen" id="screenForgot">
-        <div class="card card-forgot">
-            <div class="card-glow"></div>
-            <div class="card-header">
-                <div class="logo-icon small">
-                    <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
-                        <circle cx="24" cy="24" r="22" stroke="url(#logoGrad3)" stroke-width="2.5" fill="none"/>
-                        <path d="M24 10C18 10 14 15 14 20C14 26 18 28 20 32C21 34 22 38 24 38C26 38 27 34 28 32C30 28 34 26 34 20C34 15 30 10 24 10Z" fill="url(#logoGrad3)" opacity="0.9"/>
-                        <defs>
-                            <linearGradient id="logoGrad3" x1="0" y1="0" x2="48" y2="48">
-                                <stop offset="0%" stop-color="#6366f1"/>
-                                <stop offset="100%" stop-color="#a855f7"/>
-                            </linearGradient>
-                        </defs>
-                    </svg>
-                </div>
-                <h1 class="app-title">Şifre Sıfırlama</h1>
-                <p class="app-subtitle">Hesabınızı kurtarın</p>
-            </div>
-
-            <!-- Adım 1: TC Gir -->
-            <div class="card-body" id="forgotStep1">
-                <div class="step-indicator">
-                    <div class="step active">1</div>
-                    <div class="step-line"></div>
-                    <div class="step">2</div>
-                </div>
-
-                <div class="input-group">
-                    <label for="forgotTC">TC Kimlik Numaranız</label>
-                    <div class="input-wrapper">
-                        <span class="input-icon">🪪</span>
-                        <input type="text" id="forgotTC" maxlength="11" pattern="\d{11}" placeholder="Kayıtlı TC numaranız" required>
-                    </div>
-                </div>
-
-                <button type="button" class="btn btn-primary btn-full" id="btnForgotStep1">
-                    <span class="btn-icon">🔍</span>
-                    <span>Devam Et</span>
-                </button>
-
-                <button type="button" class="btn btn-link" id="btnBackToLogin2">
-                    <span>← Giriş Ekranına Dön</span>
-                </button>
-            </div>
-
-            <!-- Adım 2: Güvenlik Sorusu + Yeni Şifre -->
-            <div class="card-body hidden" id="forgotStep2">
-                <div class="step-indicator">
-                    <div class="step completed">✓</div>
-                    <div class="step-line active"></div>
-                    <div class="step active">2</div>
-                </div>
-
-                <div class="security-question-box" id="securityQuestionDisplay">
-                    <!-- Güvenlik sorusu burada gösterilecek -->
-                </div>
-
-                <div class="input-group">
-                    <label for="forgotSecurityA">Cevabınız</label>
-                    <div class="input-wrapper">
-                        <span class="input-icon">💬</span>
-                        <input type="text" id="forgotSecurityA" placeholder="Güvenlik sorusu cevabı" required>
-                    </div>
-                </div>
-
-                <div class="input-row">
-                    <div class="input-group">
-                        <label for="forgotNewPass">Yeni Şifre</label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">🔒</span>
-                            <input type="password" id="forgotNewPass" placeholder="Yeni şifre" minlength="6" required>
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label for="forgotNewPassConfirm">Şifre Tekrar</label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">🔒</span>
-                            <input type="password" id="forgotNewPassConfirm" placeholder="Tekrar girin" minlength="6" required>
-                        </div>
-                    </div>
-                </div>
-
-                <button type="button" class="btn btn-warning btn-full" id="btnResetPassword">
-                    <span class="btn-icon">🔄</span>
-                    <span>Şifremi Sıfırla</span>
-                </button>
-
-                <button type="button" class="btn btn-link" id="btnBackToStep1">
-                    <span>← Önceki Adım</span>
-                </button>
-            </div>
-        </div>
+    <!-- INFO CARDS -->
+    <div class="ig">
+      <div class="ic"><div class="ii">🪪</div><div class="il">Doktor ID</div><div class="iv" id="iId">—</div></div>
+      <div class="ic"><div class="ii">🔒</div><div class="il">TC Kimlik (Maskeli)</div><div class="iv" id="iTC">—</div></div>
+      <div class="ic"><div class="ii">🏥</div><div class="il">Uzmanlık Alanı</div><div class="iv" id="iUzm">—</div></div>
+      <div class="ic"><div class="ii">📅</div><div class="il">Sisteme Kayıt</div><div class="iv" id="iKayit">—</div></div>
+      <div class="ic"><div class="ii">🕐</div><div class="il">Son Giriş</div><div class="iv" id="iSonG">—</div></div>
+      <div class="ic"><div class="ii">📊</div><div class="il">Giriş Sayısı</div><div class="iv" id="iGiris">—</div></div>
     </div>
 
-    <!-- ════════════════════════════════════════════ -->
-    <!-- EKRAN 4 — PROFİL                           -->
-    <!-- ════════════════════════════════════════════ -->
-    <div class="screen" id="screenProfile">
-        <div class="card card-profile">
-            <div class="card-glow"></div>
-            
-            <!-- Profile Header -->
-            <div class="profile-header">
-                <div class="profile-avatar" id="profileAvatar">
-                    <span>👨‍⚕️</span>
-                </div>
-                <h1 class="profile-name" id="profileName">Dr. —</h1>
-                <div class="profile-badge">
-                    <span class="badge-icon">🩺</span>
-                    <span id="profileSpecialtyBadge">—</span>
-                </div>
-            </div>
+    <!-- CTA -->
+    <div class="cta">
+      <h3>Risk Analizi Başlatın</h3>
+      <p>Hasta demografik ve klinik verilerini girerek yapay zeka modeli ile inme risk tahmini gerçekleştirin.</p>
+      <div class="ctab">
+        <button class="btn bp" onclick="navRisk()">🧠 Risk Analizi Yap</button>
+        <button class="btn bs" onclick="openMod('mPass')">🔑 Şifre Değiştir</button>
+        <button class="btn bs" onclick="doLogout()">🚪 Çıkış Yap</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-            <!-- Profile Info Cards -->
-            <div class="profile-info-grid">
-                <div class="info-card">
-                    <span class="info-label">Doktor ID</span>
-                    <span class="info-value" id="profileDoctorId">—</span>
-                </div>
-                <div class="info-card">
-                    <span class="info-label">TC No</span>
-                    <span class="info-value" id="profileTC">—</span>
-                </div>
-                <div class="info-card">
-                    <span class="info-label">Uzmanlık</span>
-                    <span class="info-value" id="profileSpecialty">—</span>
-                </div>
-                <div class="info-card">
-                    <span class="info-label">Kayıt Tarihi</span>
-                    <span class="info-value" id="profileRegDate">—</span>
-                </div>
-                <div class="info-card span-2">
-                    <span class="info-label">Son Giriş</span>
-                    <span class="info-value" id="profileLastLogin">—</span>
-                </div>
-            </div>
+<!-- ═══════════════════════════════════════════════════════════
+     SAYFA 3 — RİSK ANALİZİ
+═══════════════════════════════════════════════════════════ -->
+<div id="pg-risk" class="pg">
+  <nav class="tbar">
+    <div class="tbrand"><span>🧠</span><span>Risk Analizi</span></div>
+    <div class="tacts">
+      <span class="tdoc" id="navDoc2"></span>
+      <button class="btn bs bxs" onclick="navProfile()">← Profilim</button>
+      <button class="btn bs bxs" onclick="doLogout()">Çıkış</button>
+    </div>
+  </nav>
 
-            <!-- Change Password Section (Collapsible) -->
-            <div class="collapsible-section">
-                <button type="button" class="collapsible-toggle" id="btnToggleChangePass">
-                    <span>🔑 Şifre Değiştir</span>
-                    <span class="chevron">▼</span>
-                </button>
-                <div class="collapsible-content hidden" id="changePassSection">
-                    <div class="input-group">
-                        <label for="currentPass">Mevcut Şifre</label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">🔒</span>
-                            <input type="password" id="currentPass" placeholder="Mevcut şifreniz">
-                        </div>
-                    </div>
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label for="newPass">Yeni Şifre</label>
-                            <div class="input-wrapper">
-                                <span class="input-icon">🔒</span>
-                                <input type="password" id="newPass" placeholder="Yeni şifre" minlength="6">
-                            </div>
-                        </div>
-                        <div class="input-group">
-                            <label for="newPassConfirm">Tekrar</label>
-                            <div class="input-wrapper">
-                                <span class="input-icon">🔒</span>
-                                <input type="password" id="newPassConfirm" placeholder="Tekrar girin" minlength="6">
-                            </div>
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-full btn-sm" id="btnChangePass">
-                        <span>Şifreyi Güncelle</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="profile-actions">
-                <button type="button" class="btn btn-success btn-large" id="btnGoPatient">
-                    <span class="btn-icon">🏥</span>
-                    <span>Hasta Modülüne Geç</span>
-                </button>
-                <button type="button" class="btn btn-danger" id="btnLogout">
-                    <span class="btn-icon">🚪</span>
-                    <span>Çıkış</span>
-                </button>
-            </div>
-        </div>
+  <div class="rw">
+    <div class="rh">
+      <div>
+        <h2>🧠 İnme Risk Analizi</h2>
+        <div class="rh-sub">Veri seti alanlarını eksiksiz doldurun — model inme olasılığını hesaplasın</div>
+      </div>
+      <span class="api-dot api-off" id="apiBadge2">● Yerel</span>
     </div>
 
-    <!-- Toast Container -->
-    <div id="toastContainer" class="toast-container"></div>
+    <div class="rl">
 
-    <script src="app.js"></script>
+      <!-- FORM PANELİ -->
+      <div class="fp">
+
+        <!-- DEMOGRAFİK -->
+        <div class="pt">👤 Demografik Bilgiler</div>
+
+        <div class="row2">
+          <div class="fg">
+            <label>Yaş *</label>
+            <input type="number" id="fYas" min="1" max="120" placeholder="1 – 120">
+            <span class="hint">Veri seti: 1–120</span>
+          </div>
+          <div class="fg">
+            <label>Cinsiyet *</label>
+            <div class="rdg">
+              <label><input type="radio" name="rCin" value="Erkek" checked> Erkek</label>
+              <label><input type="radio" name="rCin" value="Kadın"> Kadın</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="fg">
+            <label>Medeni Durum *</label>
+            <select id="fEvli">
+              <option value="Evet">Evet (Evli)</option>
+              <option value="Hayır">Hayır (Bekar)</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Çalışma Tipi *</label>
+            <select id="fCalisma">
+              <option value="Çalışan">Çalışan (Özel Sektör)</option>
+              <option value="Hükümet">Hükümet (Kamu)</option>
+              <option value="Serbest">Serbest (Kendi İşi)</option>
+              <option value="İşsiz">İşsiz</option>
+              <option value="Çocuk">Çocuk</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="fg">
+          <label>İkamet Tipi *</label>
+          <div class="rdg">
+            <label><input type="radio" name="rIk" value="Kentsel" checked> 🏙️ Kentsel</label>
+            <label><input type="radio" name="rIk" value="Kırsal"> 🌾 Kırsal</label>
+          </div>
+        </div>
+
+        <hr class="sep">
+
+        <!-- KLİNİK / SENSÖR -->
+        <div class="pt">🩺 Klinik &amp; Sensör Verileri</div>
+
+        <div class="row2">
+          <div class="fg">
+            <label>Hipertansiyon *</label>
+            <div class="rdg">
+              <label><input type="radio" name="rHT" value="1"> ✅ Var</label>
+              <label><input type="radio" name="rHT" value="0" checked> ❌ Yok</label>
+            </div>
+          </div>
+          <div class="fg">
+            <label>Kalp Hastalığı *</label>
+            <div class="rdg">
+              <label><input type="radio" name="rKH" value="1"> ✅ Var</label>
+              <label><input type="radio" name="rKH" value="0" checked> ❌ Yok</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="fg">
+            <label>Ort. Kan Şekeri (mg/dL) *</label>
+            <input type="number" id="fSeker" min="40" max="400" step="0.1" placeholder="40 – 400">
+            <span class="hint">Normal: 70–100 · Diyabetik: &gt;126</span>
+          </div>
+          <div class="fg">
+            <label>Vücut Kitle İndeksi (kg/m²) *</label>
+            <input type="number" id="fBmi" min="10" max="100" step="0.1" placeholder="10 – 100">
+            <span class="hint">Normal: 18.5–24.9 · Obez: &gt;30</span>
+          </div>
+        </div>
+
+        <div class="fg">
+          <label>Sigara Kullanım Durumu *</label>
+          <select id="fSigara">
+            <option value="Eski İçici">Hiç İçmedi / Bıraktı (Eski İçici)</option>
+            <option value="Halen İçiyor">Halen İçiyor</option>
+          </select>
+          <span class="hint">Model iki kategori kullanır: "Eski İçici" ve "Halen İçiyor"</span>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:14px">
+          <button class="btn bs bsm" onclick="clearRForm()">🔄 Temizle</button>
+          <button class="btn bp" style="flex:1" id="calcBtn" onclick="calcRisk()">🧠 Risk Hesapla</button>
+        </div>
+
+      </div>
+
+      <!-- SONUÇ PANELİ -->
+      <div class="rp" id="resultPanel">
+        <div class="rph">
+          <div class="rpi">🧠</div>
+          <p>Formu doldurun ve<br><strong style="color:var(--t1)">"Risk Hesapla"</strong> butonuna<br>tıklayın.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODALLER — tüm sayfaların SONUNDA, z-index:8000 ile her
+     zaman üstte kalırlar (sayfalar z-index:1).
+═══════════════════════════════════════════════════════════ -->
+
+<!-- KAYIT MODAL -->
+<div id="mReg" class="ov" onclick="if(event.target===this)closeMod('mReg')">
+  <div class="mc mlg">
+    <div class="mh"><h3>📋 Yeni Doktor Hesabı</h3><button class="mx" onclick="closeMod('mReg')">&times;</button></div>
+    <div class="mb">
+      <h4>👤 Kişisel Bilgiler</h4>
+      <div class="row2">
+        <div class="fg"><label>TC Kimlik No *</label><input id="rTC" maxlength="11" placeholder="11 haneli" inputmode="numeric"><span class="hint">0 ile başlamaz</span></div>
+        <div class="fg"><label>Ad *</label><input id="rAd" placeholder="Adınız"></div>
+      </div>
+      <div class="row2">
+        <div class="fg"><label>Soyad *</label><input id="rSoyad" placeholder="Soyadınız"></div>
+        <div class="fg"><label>Uzmanlık Alanı *</label>
+          <select id="rUzm">
+            <option value="">— Seçin —</option>
+            <option>Nöroloji</option><option>Kardiyoloji</option><option>İç Hastalıkları</option>
+            <option>Genel Cerrahi</option><option>Ortopedi</option><option>Göğüs Hastalıkları</option>
+            <option>Endokrinoloji</option><option>Psikiyatri</option><option>Radyoloji</option><option>Diğer</option>
+          </select>
+        </div>
+      </div>
+      <h4>🔒 Giriş Bilgileri</h4>
+      <div class="row2">
+        <div class="fg"><label>Şifre * <span class="hint" style="display:inline">(min 6 karakter)</span></label>
+          <div class="pw"><input type="password" id="rP1" placeholder="Şifreniz"><button class="eye-btn" type="button" onclick="togEye('rP1',this)">👁</button></div>
+        </div>
+        <div class="fg"><label>Şifre Tekrar *</label>
+          <div class="pw"><input type="password" id="rP2" placeholder="Tekrar girin"><button class="eye-btn" type="button" onclick="togEye('rP2',this)">👁</button></div>
+        </div>
+      </div>
+      <h4>🛡️ Güvenlik</h4>
+      <div class="sqb"><strong>Güvenlik Sorusu:</strong> Annenizin kızlık soyadı nedir?<br><span class="hint">Şifre sıfırlamada kullanılır.</span></div>
+      <div class="fg"><label>Güvenlik Cevabı *</label><input id="rGuv" placeholder="Annenizin kızlık soyadı"></div>
+    </div>
+    <div class="mf">
+      <button class="btn bs bsm" onclick="closeMod('mReg')">İptal</button>
+      <button class="btn bp bsm" onclick="doRegister()">✅ Hesabı Oluştur</button>
+    </div>
+  </div>
+</div>
+
+<!-- ŞİFREMİ UNUTTUM MODAL -->
+<div id="mForgot" class="ov" onclick="if(event.target===this)closeMod('mForgot')">
+  <div class="mc">
+    <div class="mh"><h3>🔓 Şifre Sıfırlama</h3><button class="mx" onclick="closeMod('mForgot')">&times;</button></div>
+    <div class="mb">
+      <div class="stps">
+        <div class="sd on" id="sd1">1</div><div class="sl"></div><div class="sd" id="sd2">2</div>
+      </div>
+      <div id="fs1">
+        <div class="fg"><label>TC Kimlik Numarası</label><input type="text" id="fTC" placeholder="11 haneli" maxlength="11" inputmode="numeric"></div>
+        <button class="btn bp w100" onclick="forgotS1()">Devam Et →</button>
+      </div>
+      <div id="fs2" class="hidden">
+        <div class="sqb" id="fSoru"></div>
+        <div class="fg"><label>Cevabınız</label><input type="text" id="fCev" placeholder="Güvenlik sorusu cevabı"></div>
+        <div class="row2">
+          <div class="fg"><label>Yeni Şifre</label><div class="pw"><input type="password" id="fP1" placeholder="Min. 6 karakter"><button class="eye-btn" type="button" onclick="togEye('fP1',this)">👁</button></div></div>
+          <div class="fg"><label>Tekrar</label><div class="pw"><input type="password" id="fP2" placeholder="Tekrar"><button class="eye-btn" type="button" onclick="togEye('fP2',this)">👁</button></div></div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn bs bsm" onclick="forgotBack()">← Geri</button>
+          <button class="btn bp bsm" style="flex:1" onclick="forgotS2()">Şifremi Sıfırla</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ŞİFRE DEĞİŞTİR MODAL -->
+<div id="mPass" class="ov" onclick="if(event.target===this)closeMod('mPass')">
+  <div class="mc">
+    <div class="mh"><h3>🔑 Şifre Değiştir</h3><button class="mx" onclick="closeMod('mPass')">&times;</button></div>
+    <div class="mb">
+      <div class="fg"><label>Mevcut Şifre</label><div class="pw"><input type="password" id="cpOld" placeholder="••••••"><button class="eye-btn" type="button" onclick="togEye('cpOld',this)">👁</button></div></div>
+      <div class="fg"><label>Yeni Şifre (min. 6)</label><div class="pw"><input type="password" id="cpNew" placeholder="••••••"><button class="eye-btn" type="button" onclick="togEye('cpNew',this)">👁</button></div></div>
+      <div class="fg"><label>Yeni Şifre Tekrar</label><div class="pw"><input type="password" id="cpNew2" placeholder="••••••"><button class="eye-btn" type="button" onclick="togEye('cpNew2',this)">👁</button></div></div>
+    </div>
+    <div class="mf">
+      <button class="btn bs bsm" onclick="closeMod('mPass')">İptal</button>
+      <button class="btn bp bsm" onclick="changePass()">Güncelle</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════
+   SABITLER
+════════════════════════════════════════════════════ */
+const DK  = 'inme_doktorlar_v3';
+const GQ  = 'Annenizin kızlık soyadı nedir?';
+const API = 'http://127.0.0.1:5000';
+
+const SEED = [
+  { doktor_id:'DR-00001', tc_no:'12345678901', ad:'Fatma',  soyad:'KAYA',  uzmanlik:'Nöroloji',       sifre:'sifre123', guvenlik:'yılmaz', kayit:'2025-01-10', son_giris:null, giris_sayisi:5,  analiz:42, aktif:true },
+  { doktor_id:'DR-00002', tc_no:'98765432109', ad:'Mehmet', soyad:'DEMİR', uzmanlik:'Kardiyoloji',    sifre:'sifre123', guvenlik:'kaya',   kayit:'2025-02-15', son_giris:null, giris_sayisi:2,  analiz:17, aktif:true },
+  { doktor_id:'DR-00003', tc_no:'11122233344', ad:'Ayşe',   soyad:'ŞAHİN', uzmanlik:'İç Hastalıkları',sifre:'sifre123', guvenlik:'demir',  kayit:'2025-03-20', son_giris:null, giris_sayisi:0,  analiz:0,  aktif:true }
+];
+
+let doctor = null;
+let ftc    = '';
+let apiOk  = false;
+
+/* ════════════════════════════════════════════════════
+   STORAGE
+════════════════════════════════════════════════════ */
+const getD = ()    => JSON.parse(localStorage.getItem(DK)||'[]');
+const setD = arr   => localStorage.setItem(DK, JSON.stringify(arr));
+const nextId = ()  => 'DR-' + String(getD().length + 1).padStart(5,'0');
+
+/* ════════════════════════════════════════════════════
+   UTILS
+════════════════════════════════════════════════════ */
+const tcOk  = v => /^\d{11}$/.test(v) && v[0] !== '0';
+const mask  = v => v ? v.slice(0,3)+'•••'+v.slice(-3) : '—';
+
+function fmtD(s) {
+  if (!s) return '—';
+  const d = new Date(s);
+  if (isNaN(d)) return s;
+  return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+}
+function fmtDT(s) {
+  if (!s) return '—';
+  const d = new Date(s);
+  if (isNaN(d)) return s;
+  return `${fmtD(s)} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function bad(id) {
+  const el = document.getElementById(id); if (!el) return;
+  el.classList.add('bad');
+  el.addEventListener('animationend', () => el.classList.remove('bad'), {once:true});
+}
+
+/* ════════════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════════════ */
+function toast(msg, type='info') {
+  const icons = {ok:'✅',err:'❌',info:'ℹ️',warn:'⚠️'};
+  const t = document.createElement('div');
+  t.className = `tk ${type}`;
+  t.innerHTML = `<span>${icons[type]||'ℹ️'}</span><span>${msg}</span>`;
+  document.getElementById('toast-box').appendChild(t);
+  setTimeout(()=>{ t.classList.add('out'); setTimeout(()=>t.remove(),300); }, 3600);
+}
+
+/* ════════════════════════════════════════════════════
+   SAYFA GEÇİŞİ — fade-through-black
+════════════════════════════════════════════════════ */
+function navTo(name) {
+  const ov = document.getElementById('pageOverlay');
+  ov.classList.add('show');
+  setTimeout(() => {
+    /* Aktif sayfayı gizle */
+    document.querySelectorAll('.pg').forEach(p => {
+      p.classList.remove('active');
+      p.scrollTop = 0; /* her sayfanın kendi scroll'unu sıfırla */
+    });
+    /* Yeni sayfayı aç */
+    const next = document.getElementById('pg-' + name);
+    next.scrollTop = 0;
+    next.classList.add('active');
+    requestAnimationFrame(() => ov.classList.remove('show'));
+  }, 210);
+}
+
+function navProfile() { navTo('profile'); }
+function navRisk()    { navTo('risk'); }
+function navLogin()   { navTo('login'); }
+
+/* ════════════════════════════════════════════════════
+   API KONTROL
+════════════════════════════════════════════════════ */
+async function checkAPI() {
+  try {
+    const r = await fetch(API + '/api/doktorlar', {signal: AbortSignal.timeout(2200)});
+    apiOk = r.ok;
+  } catch { apiOk = false; }
+  ['apiBadge','apiBadge2'].forEach(id => {
+    const el = document.getElementById(id); if (!el) return;
+    el.className = 'api-dot ' + (apiOk ? 'api-on' : 'api-off');
+    el.textContent = apiOk ? '● API Bağlı' : '● Yerel Mod';
+  });
+}
+
+/* ════════════════════════════════════════════════════
+   GİRİŞ / ÇIKIŞ
+════════════════════════════════════════════════════ */
+function doLogin() {
+  const tc = document.getElementById('ltc').value.trim();
+  const pw = document.getElementById('lpass').value;
+  if (!tc)       { toast('TC kimlik zorunludur.',  'err'); bad('ltc');   return; }
+  if (!pw)        { toast('Şifre zorunludur.',      'err'); bad('lpass'); return; }
+  if (!tcOk(tc)) { toast('Geçersiz TC (11 haneli, 0 ile başlamaz).', 'err'); bad('ltc'); return; }
+
+  const docs = getD();
+  const doc  = docs.find(d => d.tc_no === tc && d.aktif);
+  if (!doc)          { toast('Bu TC ile aktif kayıt bulunamadı.', 'err'); bad('ltc');   return; }
+  if (doc.sifre !== pw){ toast('Şifre hatalı.',                          'err'); bad('lpass'); return; }
+
+  doc.son_giris    = new Date().toISOString();
+  doc.giris_sayisi = (doc.giris_sayisi || 0) + 1;
+  setD(docs);
+  doctor = doc;
+  loadProfile(doc);
+  toast(`Hoş geldiniz, Dr. ${doc.ad} ${doc.soyad}!`, 'ok');
+  navTo('profile');
+}
+
+function doLogout() {
+  doctor = null;
+  document.getElementById('ltc').value   = '';
+  document.getElementById('lpass').value = '';
+  toast('Güvenli çıkış yapıldı.', 'info');
+  navTo('login');
+}
+
+/* ════════════════════════════════════════════════════
+   KAYIT
+════════════════════════════════════════════════════ */
+function doRegister() {
+  const tc  = document.getElementById('rTC').value.trim();
+  const ad  = document.getElementById('rAd').value.trim();
+  const soy = document.getElementById('rSoyad').value.trim();
+  const uzm = document.getElementById('rUzm').value;
+  const p1  = document.getElementById('rP1').value;
+  const p2  = document.getElementById('rP2').value;
+  const guv = document.getElementById('rGuv').value.trim();
+
+  if (!tcOk(tc))    { toast('Geçersiz TC.',              'err'); bad('rTC');   return; }
+  if (!ad)           { toast('Ad zorunludur.',            'err'); bad('rAd');   return; }
+  if (!soy)          { toast('Soyad zorunludur.',         'err'); bad('rSoyad');return; }
+  if (!uzm)          { toast('Uzmanlık alanı seçiniz.',  'err');               return; }
+  if (p1.length < 6) { toast('Şifre en az 6 karakter.',  'err'); bad('rP1');   return; }
+  if (p1 !== p2)     { toast('Şifreler eşleşmiyor.',     'err'); bad('rP2');   return; }
+  if (!guv)          { toast('Güvenlik cevabı zorunludur.', 'err'); bad('rGuv'); return; }
+
+  const docs = getD();
+  if (docs.find(d => d.tc_no === tc)) { toast('Bu TC ile kayıt zaten mevcut.', 'err'); bad('rTC'); return; }
+
+  const yeni = {
+    doktor_id: nextId(), tc_no: tc,
+    ad: ad[0].toUpperCase() + ad.slice(1).toLowerCase(),
+    soyad: soy.toUpperCase(), uzmanlik: uzm, sifre: p1,
+    guvenlik: guv.toLowerCase().trim(),
+    kayit: new Date().toISOString().split('T')[0],
+    son_giris: null, giris_sayisi: 0, analiz: 0, aktif: true
+  };
+  docs.push(yeni); setD(docs);
+  closeMod('mReg');
+  ['rTC','rAd','rSoyad','rP1','rP2','rGuv'].forEach(i => document.getElementById(i).value='');
+  document.getElementById('rUzm').value = '';
+  toast(`Hesabınız oluşturuldu (${yeni.doktor_id}). Giriş yapabilirsiniz.`, 'ok');
+}
+
+/* ════════════════════════════════════════════════════
+   ŞİFREMİ UNUTTUM
+════════════════════════════════════════════════════ */
+function openForgot() {
+  ftc = '';
+  ['fTC','fCev','fP1','fP2'].forEach(i => document.getElementById(i).value='');
+  document.getElementById('fs1').classList.remove('hidden');
+  document.getElementById('fs2').classList.add('hidden');
+  document.getElementById('sd1').className = 'sd on';
+  document.getElementById('sd2').className = 'sd';
+  openMod('mForgot');
+}
+function forgotS1() {
+  const tc = document.getElementById('fTC').value.trim();
+  if (!tcOk(tc)) { toast('Geçersiz TC.', 'err'); bad('fTC'); return; }
+  const doc = getD().find(d => d.tc_no === tc && d.aktif);
+  if (!doc) { toast('Bu TC ile aktif doktor bulunamadı.', 'err'); bad('fTC'); return; }
+  ftc = tc;
+  document.getElementById('fSoru').innerHTML = `<strong>Güvenlik Sorusu:</strong> ${GQ}`;
+  document.getElementById('fs1').classList.add('hidden');
+  document.getElementById('fs2').classList.remove('hidden');
+  document.getElementById('sd1').className = 'sd dn';
+  document.getElementById('sd2').className = 'sd on';
+}
+function forgotBack() {
+  ftc = '';
+  document.getElementById('fs2').classList.add('hidden');
+  document.getElementById('fs1').classList.remove('hidden');
+  document.getElementById('sd1').className = 'sd on';
+  document.getElementById('sd2').className = 'sd';
+}
+function forgotS2() {
+  const cev = document.getElementById('fCev').value.trim();
+  const p1  = document.getElementById('fP1').value;
+  const p2  = document.getElementById('fP2').value;
+  if (!cev)          { toast('Cevap zorunludur.',         'err'); bad('fCev'); return; }
+  if (p1.length < 6) { toast('Şifre en az 6 karakter.',  'err'); bad('fP1');  return; }
+  if (p1 !== p2)     { toast('Şifreler eşleşmiyor.',     'err'); bad('fP2');  return; }
+  const docs = getD();
+  const idx = docs.findIndex(d => d.tc_no === ftc && d.aktif);
+  if (idx < 0) { toast('Doktor bulunamadı.', 'err'); return; }
+  if (docs[idx].guvenlik !== cev.toLowerCase().trim()) {
+    toast('Güvenlik sorusu cevabı yanlış.', 'err'); bad('fCev'); return;
+  }
+  docs[idx].sifre = p1; setD(docs);
+  closeMod('mForgot'); ftc = '';
+  toast('Şifreniz sıfırlandı! Giriş yapabilirsiniz.', 'ok');
+}
+
+/* ════════════════════════════════════════════════════
+   ŞİFRE DEĞİŞTİR
+════════════════════════════════════════════════════ */
+function changePass() {
+  if (!doctor) return;
+  const old = document.getElementById('cpOld').value;
+  const n1  = document.getElementById('cpNew').value;
+  const n2  = document.getElementById('cpNew2').value;
+  if (!old||!n1||!n2)    { toast('Tüm alanları doldurun.', 'err'); return; }
+  if (old !== doctor.sifre){ toast('Mevcut şifre hatalı.', 'err'); bad('cpOld'); return; }
+  if (n1.length < 6)      { toast('Yeni şifre en az 6 karakter.', 'err'); bad('cpNew'); return; }
+  if (n1 !== n2)           { toast('Yeni şifreler eşleşmiyor.', 'err'); bad('cpNew2'); return; }
+  const docs = getD();
+  const i = docs.findIndex(d => d.tc_no === doctor.tc_no);
+  if (i > -1) { docs[i].sifre = n1; setD(docs); }
+  doctor.sifre = n1;
+  ['cpOld','cpNew','cpNew2'].forEach(x => document.getElementById(x).value='');
+  closeMod('mPass');
+  toast('Şifreniz güncellendi!', 'ok');
+}
+
+/* ════════════════════════════════════════════════════
+   PROFİL
+════════════════════════════════════════════════════ */
+function loadProfile(doc) {
+  const ini = (doc.ad[0] + (doc.soyad[0]||'')).toUpperCase();
+  set('hAv',   ini);
+  set('hName', `Dr. ${doc.ad} ${doc.soyad}`);
+  set('hBadge',`🩺 ${doc.uzmanlik} Uzmanı`);
+  set('hWel',  `Merhaba, Dr. ${doc.ad}! Sisteme hoş geldiniz.`);
+  set('hLast', doc.son_giris ? `Son giriş: ${fmtDT(doc.son_giris)}` : 'İlk giriş — Hoş geldiniz!');
+  animN('sAnaliz', doc.analiz || 0);
+  animN('sGiris',  doc.giris_sayisi || 0);
+  set('sKayit', fmtD(doc.kayit));
+  set('iId',     doc.doktor_id);
+  set('iTC',     mask(doc.tc_no));
+  set('iUzm',    doc.uzmanlik);
+  set('iKayit',  fmtD(doc.kayit));
+  set('iSonG',   fmtDT(doc.son_giris));
+  set('iGiris',  doc.giris_sayisi || 0);
+  const dn = `Dr. ${doc.ad} ${doc.soyad[0]}.`;
+  set('navDoc',  dn);
+  set('navDoc2', dn);
+}
+function set(id, v) { const el = document.getElementById(id); if(el) el.textContent = v; }
+function animN(id, target) {
+  const el = document.getElementById(id); if (!el) return;
+  let v = 0; const step = Math.max(1, target/50);
+  const t = setInterval(()=>{ v=Math.min(v+step,target); el.textContent=Math.round(v); if(v>=target)clearInterval(t); }, 22);
+}
+
+/* ════════════════════════════════════════════════════
+   RİSK — YEREL MODEL (fallback)
+   Değerler modelin GECERLI_* setleriyle örtüşmeli
+════════════════════════════════════════════════════ */
+function localScore(d) {
+  let s = 0;
+  const yas = +d.yas;
+  if (yas >= 70)       s += 0.30;
+  else if (yas >= 60)  s += 0.22;
+  else if (yas >= 50)  s += 0.14;
+  else if (yas >= 40)  s += 0.07;
+  if (+d.hipertansiyon  === 1) s += 0.22;
+  if (+d.kalp_hastaligi === 1) s += 0.20;
+  if (d.sigara_durumu === 'Halen İçiyor') s += 0.16;
+  else                                     s += 0.05; // Eski İçici
+  const sek = +d.ortalama_seker;
+  if      (sek > 220) s += 0.14;
+  else if (sek > 160) s += 0.09;
+  else if (sek > 120) s += 0.04;
+  const bmi = +d.vucut_kitle_indeksi;
+  if      (bmi > 40) s += 0.10;
+  else if (bmi > 30) s += 0.07;
+  else if (bmi > 27) s += 0.03;
+  return Math.min(s, 1.0);
+}
+
+function rInfo(skor) {
+  if (skor < 0.10) return { lv:'Düşük', c:'#22c55e', em:'🟢', cls:'ok' };
+  if (skor < 0.30) return { lv:'Orta',  c:'#f59e0b', em:'🟡', cls:'warn' };
+  return               { lv:'Yüksek', c:'#ef4444', em:'🔴', cls:'err' };
+}
+
+function buildRecs(skor, d) {
+  const r = [];
+  if (skor >= 0.30) {
+    r.push('Acil nöroloji veya kardiyoloji konsültasyonu alınız.');
+    r.push('Hastanın hospitalizasyonu değerlendirilmelidir.');
+    r.push('Günlük ilaç takibi ve yakın klinik izlem gereklidir.');
+  } else if (skor >= 0.10) {
+    r.push('En kısa sürede uzman hekim değerlendirmesi yapılmalıdır.');
+    r.push('3 aylık periyodik kontrol ve takip önerilir.');
+    r.push('Sağlıklı beslenme ve düzenli fiziksel aktivite başlatılmalıdır.');
+  } else {
+    r.push('Yıllık rutin sağlık kontrolleri aksatılmamalıdır.');
+    r.push('Koruyucu yaşam tarzı alışkanlıkları sürdürülmelidir.');
+  }
+  if (+d.hipertansiyon === 1)  r.push('Hipertansiyon: Kardiyoloji takibi ve ilaç uyum kontrolü önerilir.');
+  if (+d.kalp_hastaligi === 1) r.push('Kalp Hastalığı: Kardiyoloji uzman takibi gereklidir.');
+  if (+d.ortalama_seker > 180) r.push('Yüksek kan şekeri: Endokrinoloji (Diyabet) uzmanına başvurunuz.');
+  if (+d.vucut_kitle_indeksi > 30) r.push('Obezite: Beslenme uzmanı ve İç Hastalıkları konsültasyonu önerilir.');
+  if (d.sigara_durumu === 'Halen İçiyor') r.push('Sigarayı bırakma programına yönlendirilmesi önerilir.');
+  return r;
+}
+
+function buildStructuredRecs(skor, d) {
+  const doktorlar = [];
+  const yasam     = [];
+  const izleme    = [];
+
+  if (skor >= 0.30) {
+    doktorlar.push({uzmanlik:'Nöroloji',        aciliyet:'ACİL',       neden:'Yüksek inme riski — bu hafta randevu alın'});
+    doktorlar.push({uzmanlik:'Kardiyoloji',      aciliyet:'ACİL',       neden:'Kardiyovasküler risk faktörü acil değerlendirmesi'});
+  } else if (skor >= 0.10) {
+    doktorlar.push({uzmanlik:'Nöroloji',         aciliyet:'Öncelikli',  neden:'Orta düzeyde inme riski — 1 ay içinde değerlendirme'});
+  } else {
+    doktorlar.push({uzmanlik:'İç Hastalıkları / Genel Pratisyen', aciliyet:'Rutin', neden:'Yıllık rutin kontrol yeterlidir'});
+  }
+
+  if (+d.hipertansiyon === 1) {
+    doktorlar.push({uzmanlik:'Kardiyoloji', aciliyet:skor>=0.30?'ACİL':'Öncelikli', neden:'Tansiyon kontrolü ve ilaç düzenlemesi gereklidir'});
+    yasam.push('Günlük tuz alımını 5 g altında tutun — işlenmiş gıdalardan kaçının');
+    izleme.push('Günde sabah-akşam tansiyon ölçümü yapın');
+  }
+  if (+d.kalp_hastaligi === 1) {
+    doktorlar.push({uzmanlik:'Kardiyoloji', aciliyet:skor>=0.30?'ACİL':'Öncelikli', neden:'Kalp hastalığı inme riskini artırır — düzenli takip şarttır'});
+    izleme.push('EKG ve ekokardiyografi için kardiyoloji randevusu alın');
+  }
+  if (+d.ortalama_seker > 180) {
+    doktorlar.push({uzmanlik:'Endokrinoloji (Diyabet)', aciliyet:'Öncelikli', neden:'Yüksek kan şekeri inme riskini artırır'});
+    yasam.push('Düşük glisemik besinler tercih edin — şekerli içeceklerden kaçının');
+    izleme.push('3 ayda bir HbA1c testi yaptırın');
+  }
+  if (+d.vucut_kitle_indeksi > 30) {
+    doktorlar.push({uzmanlik:'Beslenme ve Diyet', aciliyet:'Rutin', neden:'Obezite kardiyovasküler riski artırır'});
+    yasam.push('Kalori kısıtlamalı diyet ve düzenli egzersiz programı başlatın');
+  }
+  if (d.sigara_durumu === 'Halen İçiyor') {
+    yasam.push('Sigarayı bırakmak inme riskini yarıya indirir — ALO 171 hattı veya sigara bırakma polikliniğine başvurun');
+  }
+  yasam.push('Haftada 150 dakika orta şiddetli aerobik egzersiz yapın (yürüyüş, yüzme, bisiklet)');
+  yasam.push('Akdeniz diyeti benimseyin: bol sebze-meyve, tam tahıl, zeytinyağı, balık');
+  yasam.push('Stresi yönetin, düzenli uyuyun (7-8 saat); alkol tüketimini sınırlayın');
+
+  if (!izleme.length) izleme.push('Yıllık tansiyon, kan şekeri ve kolesterol kontrolü yaptırın');
+
+  return { doktorlar, yasam, izleme };
+}
+
+function buildFactors(d) {
+  const f = [];
+  const yas = +d.yas;
+  if      (yas >= 70) f.push({l:'Yaş (≥70)',           v:9, c:'#ef4444'});
+  else if (yas >= 60) f.push({l:'Yaş (60–69)',          v:7, c:'#ef4444'});
+  else if (yas >= 50) f.push({l:'Yaş (50–59)',          v:5, c:'#f59e0b'});
+  else if (yas >= 40) f.push({l:'Yaş (40–49)',          v:3, c:'#f59e0b'});
+  if (+d.hipertansiyon  === 1) f.push({l:'Hipertansiyon',    v:8, c:'#ef4444'});
+  if (+d.kalp_hastaligi === 1) f.push({l:'Kalp Hastalığı',   v:8, c:'#ef4444'});
+  if (d.sigara_durumu === 'Halen İçiyor') f.push({l:'Aktif Sigara', v:6, c:'#f59e0b'});
+  const sek = +d.ortalama_seker;
+  if      (sek > 220) f.push({l:'Kan Şekeri (Çok Yük.)', v:7, c:'#ef4444'});
+  else if (sek > 160) f.push({l:'Kan Şekeri (Yüksek)',   v:5, c:'#f59e0b'});
+  const bmi = +d.vucut_kitle_indeksi;
+  if      (bmi > 35) f.push({l:'VKİ (Ağır Obez)',  v:6, c:'#ef4444'});
+  else if (bmi > 30) f.push({l:'VKİ (Obez)',        v:4, c:'#f59e0b'});
+  else if (bmi > 27) f.push({l:'VKİ (Fazla Kilo)', v:2, c:'#f59e0b'});
+  return f.slice(0,6);
+}
+
+/* ════════════════════════════════════════════════════
+   RİSK HESAPLA
+════════════════════════════════════════════════════ */
+async function calcRisk() {
+  const yas   = parseInt(document.getElementById('fYas').value);
+  const seker = parseFloat(document.getElementById('fSeker').value);
+  const bmi   = parseFloat(document.getElementById('fBmi').value);
+
+  if (!yas   || yas   <   1 || yas   > 120) { toast('Geçerli yaş giriniz (1–120).', 'err');              bad('fYas');   return; }
+  if (!seker || seker <  40 || seker > 400) { toast('Geçerli kan şekeri giriniz (40–400 mg/dL).', 'err'); bad('fSeker'); return; }
+  if (!bmi   || bmi   <  10 || bmi   > 100) { toast('Geçerli VKİ giriniz (10–100 kg/m²).', 'err');        bad('fBmi');   return; }
+
+  const cin    = document.querySelector('input[name="rCin"]:checked').value;
+  const hiper  = parseInt(document.querySelector('input[name="rHT"]:checked').value);
+  const kalp   = parseInt(document.querySelector('input[name="rKH"]:checked').value);
+  const ikamet = document.querySelector('input[name="rIk"]:checked').value;
+  const evli   = document.getElementById('fEvli').value;
+  const cal    = document.getElementById('fCalisma').value;
+  const sig    = document.getElementById('fSigara').value;
+
+  const payload = {
+    yas, cinsiyet: cin,
+    hipertansiyon: hiper, kalp_hastaligi: kalp,
+    evli_mi: evli, calisma_tipi: cal, ikamet_tipi: ikamet,
+    ortalama_seker: seker, vucut_kitle_indeksi: bmi,
+    sigara_durumu: sig
+  };
+
+  /* Loading */
+  const btn = document.getElementById('calcBtn');
+  btn.disabled = true;
+  document.getElementById('resultPanel').innerHTML =
+    '<div style="text-align:center;color:var(--t2)"><div style="font-size:2rem;margin-bottom:12px">⚙️</div><div style="font-size:.84rem">Model hesaplanıyor...</div></div>';
+
+  let skor, doktorlar = [], yasam_tarzi = [], izleme = [], src;
+
+  if (apiOk) {
+    try {
+      const res  = await fetch(API + '/api/risk-tahmini', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload), signal: AbortSignal.timeout(7000)
+      });
+      const json = await res.json();
+      if (json.durum === 'basarili') {
+        skor        = json.risk_skoru;
+        doktorlar   = json.doktor_onerileri || [];
+        yasam_tarzi = json.yasam_tarzi_onerileri || [];
+        izleme      = json.izleme_onerileri || [];
+        src = 'Gradient Boosting (API)';
+      } else throw new Error(json.hata);
+    } catch {
+      toast('API yanıt vermedi — yerel model kullanılıyor.', 'warn');
+      skor = localScore(payload);
+      const sr = buildStructuredRecs(skor, payload);
+      doktorlar = sr.doktorlar; yasam_tarzi = sr.yasam; izleme = sr.izleme;
+      src = 'Yerel Model';
+    }
+  } else {
+    skor = localScore(payload);
+    const sr = buildStructuredRecs(skor, payload);
+    doktorlar = sr.doktorlar; yasam_tarzi = sr.yasam; izleme = sr.izleme;
+    src = 'Yerel Model';
+  }
+
+  btn.disabled = false;
+  const info = rInfo(skor);
+  const pct  = Math.round(skor * 100);
+  const facs = buildFactors(payload);
+
+  document.getElementById('resultPanel').innerHTML = `
+  <div style="width:100%">
+    <div style="text-align:center;margin-bottom:10px">
+      <span style="font-size:.7rem;color:var(--t3);background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:12px;padding:3px 10px">${src}</span>
+    </div>
+
+    <div class="gw">
+      <div class="gauge" style="border-color:${info.c}35">
+        <span class="gs" id="gScoreEl" style="color:${info.c}">0%</span>
+        <span class="gl" style="color:${info.c}">${info.lv}</span>
+      </div>
+      <div class="rb"><div class="rf" id="gBarEl" style="background:${info.c}"></div></div>
+      <div class="rl-txt" style="color:${info.c}">${info.em} ${info.lv} Risk &nbsp;·&nbsp; %${pct}</div>
+    </div>
+
+    ${facs.length ? `
+    <div class="fl">
+      <div class="ft">Etki Eden Faktörler</div>
+      ${facs.map((f,i)=>`
+      <div class="fac">
+        <span class="fl_">${f.l}</span>
+        <div class="fb"><div class="ff" id="ff${i}" style="background:${f.c}"></div></div>
+        <span class="fn">${f.v}/10</span>
+      </div>`).join('')}
+    </div>` : ''}
+
+    ${doktorlar.length ? `
+    <div class="rec-section">
+      <div class="rec-sec-title">🏥 Hangi Doktora Başvurmalısınız?</div>
+      <div class="doc-cards">
+        ${doktorlar.map(d=>`<div class="doc-card">
+          <span class="doc-badge ${d.aciliyet==='ACİL'?'acil':d.aciliyet==='Öncelikli'?'oncelikli':'rutin'}">${d.aciliyet}</span>
+          <div><div class="doc-name">👨‍⚕️ ${d.uzmanlik}</div><div class="doc-why">${d.neden}</div></div>
+        </div>`).join('')}
+      </div>
+    </div>` : ''}
+
+    ${yasam_tarzi.length ? `
+    <div class="rec-section">
+      <div class="rec-sec-title">🌿 Yaşam Tarzı Önerileri</div>
+      <ul class="tip-list">
+        ${yasam_tarzi.map(t=>`<li class="tip-item"><span class="tip-icon">✅</span><span>${t}</span></li>`).join('')}
+      </ul>
+    </div>` : ''}
+
+    ${izleme.length ? `
+    <div class="rec-section">
+      <div class="rec-sec-title">📊 Takip ve İzleme</div>
+      <ul class="tip-list">
+        ${izleme.map(t=>`<li class="tip-item"><span class="tip-icon">📌</span><span>${t}</span></li>`).join('')}
+      </ul>
+    </div>` : ''}
+
+    <div class="ract">
+      <button class="btn bs bsm" onclick="saveRes()">💾 Kaydet</button>
+      <button class="btn bs bsm" onclick="window.print()">🖨️ Yazdır</button>
+      <button class="btn bs bsm" onclick="clearRForm()">🔄 Yeni</button>
+    </div>
+  </div>`;
+
+  /* Animasyonlar */
+  requestAnimationFrame(() => {
+    animScore('gScoreEl', pct);
+    setTimeout(() => { const b = document.getElementById('gBarEl'); if(b) b.style.width = pct+'%'; }, 80);
+    facs.forEach((_,i) => setTimeout(()=>{ const e=document.getElementById('ff'+i); if(e) e.style.width=(facs[i].v*10)+'%'; }, 150+i*80));
+    if (info.lv === 'Yüksek') setTimeout(()=> toast('🚨 Yüksek inme riski — acil uzman konsültasyonu önerilir!', 'err'), 800);
+  });
+
+  /* Analiz sayacı */
+  if (doctor) {
+    const docs = getD();
+    const i = docs.findIndex(d => d.tc_no === doctor.tc_no);
+    if (i > -1) { docs[i].analiz = (docs[i].analiz||0)+1; setD(docs); doctor.analiz = docs[i].analiz; }
+  }
+}
+
+function animScore(id, target) {
+  const el = document.getElementById(id); if (!el) return;
+  let c = 0; const s = target/55;
+  const t = setInterval(()=>{ c=Math.min(c+s,target); el.textContent=Math.round(c)+'%'; if(c>=target)clearInterval(t); }, 20);
+}
+
+function saveRes()   { toast('Risk sonucu kaydedildi.', 'ok'); }
+
+function clearRForm() {
+  ['fYas','fSeker','fBmi'].forEach(i => document.getElementById(i).value = '');
+  const q = (s,v) => { const e=document.querySelector(s); if(e) e.checked=true; };
+  q('input[name="rCin"][value="Erkek"]');
+  q('input[name="rHT"][value="0"]');
+  q('input[name="rKH"][value="0"]');
+  q('input[name="rIk"][value="Kentsel"]');
+  document.getElementById('fEvli').value   = 'Evet';
+  document.getElementById('fCalisma').value = 'Çalışan';
+  document.getElementById('fSigara').value  = 'Eski İçici';
+  document.getElementById('resultPanel').innerHTML =
+    '<div class="rph"><div class="rpi">🧠</div><p>Formu doldurun ve<br><strong style="color:var(--t1)">"Risk Hesapla"</strong> butonuna<br>tıklayın.</p></div>';
+}
+
+/* ════════════════════════════════════════════════════
+   MODAL
+════════════════════════════════════════════════════ */
+function openMod(id)  { document.getElementById(id).classList.add('open'); }
+function closeMod(id) { document.getElementById(id).classList.remove('open'); }
+function togEye(inputId, btn) {
+  const el = document.getElementById(inputId);
+  el.type = el.type === 'password' ? 'text' : 'password';
+  btn.textContent = el.type === 'password' ? '👁' : '🙈';
+}
+
+/* ════════════════════════════════════════════════════
+   PARTİKÜLLER
+════════════════════════════════════════════════════ */
+function initParticles() {
+  const c = document.getElementById('pCvs'); if (!c) return;
+  const ctx = c.getContext('2d');
+  const rsz = () => { c.width = innerWidth; c.height = innerHeight; };
+  rsz(); addEventListener('resize', rsz);
+  const pts = Array.from({length:55}, () => ({
+    x:Math.random()*innerWidth, y:Math.random()*innerHeight,
+    r:Math.random()*2.2+.5, dx:(Math.random()-.5)*.28, dy:-(Math.random()*.38+.1),
+    o:Math.random()*.38+.06
+  }));
+  function draw() {
+    ctx.clearRect(0,0,c.width,c.height);
+    pts.forEach(p => {
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(99,102,241,${p.o})`; ctx.fill();
+      p.x+=p.dx; p.y+=p.dy;
+      if (p.y<-4)       { p.y=c.height+4; p.x=Math.random()*c.width; }
+      if (p.x<-4)         p.x=c.width+4;
+      if (p.x>c.width+4)  p.x=-4;
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+/* ════════════════════════════════════════════════════
+   BAŞLANGIÇ
+════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  if (!localStorage.getItem(DK)) setD(SEED);
+  initParticles();
+  checkAPI();
+  ['ltc','lpass'].forEach(id =>
+    document.getElementById(id).addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); })
+  );
+});
+</script>
 </body>
 </html>

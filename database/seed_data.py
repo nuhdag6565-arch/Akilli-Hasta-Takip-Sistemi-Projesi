@@ -1,389 +1,278 @@
 """
-Modül Adı: Seed Data Loader
-Açıklama: Veritabanını örnek verilerle doldurur - Doktorlar, Hastalar, Tıbbi Kayıtlar, Yaşam Tarzı
-Sorumlu: Nuh Dağ (Veritabanı)
-Tarih: 2026-05-05
-Version: 2.0
+Modül Adı: seed_data.py
+Açıklama : temizlenmis_hasta_verisi.csv dosyasından veritabanını
+           başlangıç verileriyle doldurur.
+           insert_many() kullanarak hızlı toplu ekleme yapar.
+Sorumlu  : Nuh Dağ (Veritabanı)
+Tarih    : 2026-05-08
+Version  : 3.0
 """
 
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
 import random
 from database.connection import baglanti_olustur
-from database.schema import koleksiyonlari_olustur
+from database.schema import sema_olustur
 
-# ============================================================================
-# ÖRNEK VERİ KÜMELERİ
-# ============================================================================
+# ── Kodlama → Metin eşlemeleri ─────────────────────────────────
+SIGARA  = {0: "Hiç İçmedi", 1: "Halen İçiyor", 2: "Eski İçici"}
+CALISMA = {
+    0: "Özel Sektör", 1: "Kamu",
+    2: "Serbest Meslek", 3: "Çocuk", 4: "Emekli"
+}
+EVLILIK = {0: "Hayır", 1: "Evet"}
+IKAMET  = {0: "Kırsal", 1: "Kentsel"}
+CINSIYET = {0: "Kadın", 1: "Erkek"}
 
+# ── Örnek doktorlar ────────────────────────────────────────────
 DOKTOR_LISTESI = [
     {
-        "kullanici_no": "KL-0001",
-        "ad": "Ahmet",
-        "soyad": "Yılmaz",
-        "email": "ahmet.yilmaz@hospital.com",
-        "tc_no": "12345678901",
-        "telefon": "05551234567",
-        "rol": "doktor",
-        "uzmanlık_alani": "Kardiyoloji",
-        "departman": "Kardiyoloji Kliniği",
-        "aktif": True,
+        "doktor_id":    "DR-00001",
+        "ad":           "Fatma",
+        "soyad":        "KAYA",
+        "uzmanlik":     "Nöroloji",
+        "email":        "fatma.kaya@hastane.com",
+        "sifre_hash":   "demo_hash_1",
+        "aktif":        True,
+        "kayit_tarihi": datetime.now(),
     },
     {
-        "kullanici_no": "KL-0002",
-        "ad": "Fatma",
-        "soyad": "Kaya",
-        "email": "fatma.kaya@hospital.com",
-        "tc_no": "23456789012",
-        "telefon": "05559876543",
-        "rol": "doktor",
-        "uzmanlık_alani": "Nöroloji",
-        "departman": "Nöroloji Kliniği",
-        "aktif": True,
+        "doktor_id":    "DR-00002",
+        "ad":           "Mehmet",
+        "soyad":        "DEMİR",
+        "uzmanlik":     "Kardiyoloji",
+        "email":        "mehmet.demir@hastane.com",
+        "sifre_hash":   "demo_hash_2",
+        "aktif":        True,
+        "kayit_tarihi": datetime.now(),
     },
     {
-        "kullanici_no": "KL-0003",
-        "ad": "Mehmet",
-        "soyad": "Demir",
-        "email": "mehmet.demir@hospital.com",
-        "tc_no": "34567890123",
-        "telefon": "05553334444",
-        "rol": "yönetici",
-        "uzmanlık_alani": "Hastane Yönetimi",
-        "departman": "İdari",
-        "aktif": True,
+        "doktor_id":    "DR-00003",
+        "ad":           "Ayşe",
+        "soyad":        "ŞAHİN",
+        "uzmanlik":     "İç Hastalıkları",
+        "email":        "ayse.sahin@hastane.com",
+        "sifre_hash":   "demo_hash_3",
+        "aktif":        True,
+        "kayit_tarihi": datetime.now(),
     },
 ]
 
-SIKAYET_LISTESI = [
-    "Göğüste ağrı",
-    "Baş ağrısı",
-    "Nefes darlığı",
-    "Baş dönmesi",
-    "Kolda/bacakta zayıflık",
-    "Konuşmada güçlük",
-    "Hiçbir şikayet yok",
-]
 
-TANI_LISTESI = [
-    "Hipertansiyon kontrol altında",
-    "Kalp hastalığı öncü belirtileri",
-    "Diyabet belirlendi",
-    "Yüksek kolesterol",
-    "İnme riski altında",
-    "Normal sağlık durumu",
-]
+def doktorlari_yukle(db):
+    """3 örnek doktor hesabı oluşturur."""
+    print("\n[1/4] Doktor hesapları yükleniyor...")
+    db.doktorlar.delete_many({})
+    db.doktorlar.insert_many(DOKTOR_LISTESI)
+    print(f"  ✅  {len(DOKTOR_LISTESI)} doktor eklendi.")
 
-# ============================================================================
-# DOKTOR VERİSİ YÜKLEME
-# ============================================================================
 
-def doktor_verisi_yukle(db):
-    """Örnek doktor verilerini yükler."""
-    print("\n👨‍⚕️  DOKTOR VERİSİ YÜKLENIYOR...")
-    print("-" * 60)
-    
-    db.kullanicilar.delete_many({})
-    
-    for doktor in DOKTOR_LISTESI:
-        doktor["kayit_tarihi"] = datetime.now()
-        doktor["olusturma_tarihi"] = datetime.now()
-        doktor["son_giris_tarihi"] = datetime.now() - timedelta(days=random.randint(0, 30))
-        
-        try:
-            sonuc = db.kullanicilar.insert_one(doktor)
-            print(f"✅ {doktor['ad']} {doktor['soyad']} ({doktor['rol']}) eklendi")
-        except Exception as e:
-            print(f"❌ Doktor eklenirken hata: {str(e)}")
-    
-    print(f"📊 Toplam {db.kullanicilar.count_documents({})} doktor/kullanıcı yüklendi\n")
+def hastalari_yukle_csv(db, csv_yolu: str) -> bool:
+    """
+    CSV dosyasından hasta, tıbbi bilgi ve yaşam tarzı
+    verilerini toplu olarak MongoDB'ye aktarır.
+    """
+    print("\n[2/4] Hasta verileri yükleniyor (CSV)...")
 
-# ============================================================================
-# HASTA VERİSİ YÜKLEME (CSV'den + Örnek Veri)
-# ============================================================================
-
-def hasta_verisi_yukle_csv(db):
-    """CSV dosyasından hasta verilerini yükler."""
-    print("\n🏥 HASTA VERİSİ YÜKLENIYOR (CSV'den)...")
-    print("-" * 60)
-    
-    db.hastalar.delete_many({})
-    db.tibbi_kayitlar.delete_many({})
-    db.yasam_tarzi.delete_many({})
-    
     try:
-        df = pd.read_csv("data/processed/temizlenmis_hasta_verisi.csv")
-        print(f"📄 CSV okundu: {len(df)} hasta kaydı bulundu")
-        
-        # Sigara durumu mapping
-        sigara_mapping = {
-            0: "Hiç İçmedi",
-            1: "Halen İçiyor",
-            2: "Eski İçici"
-        }
-        
-        # Çalışma tipi mapping
-        calisma_mapping = {
-            0: "Özel Sektör",
-            1: "Kamu",
-            2: "Serbest Meslek",
-            3: "Çocuk",
-            4: "Emekli"
-        }
-        
-        # CSV verileri uygun formata dönüştür
-        for idx, row in df.iterrows():
-            # Cinsiyet dönüşümü: 0=Kadın, 1=Erkek
-            cinsiyet = "Erkek" if int(row.get("cinsiyet", 0)) == 1 else "Kadın"
-            
-            # Yaş hesaplama
-            yas = int(row.get("yas", 0))
-            dogum_yili = datetime.now().year - yas
-            
-            # Hasta demografik verisi
-            hasta = {
-                "hasta_no": f"HS-{str(idx + 1).zfill(4)}",
-                "tc_no": f"{10000000000 + idx}",  # Benzersiz TC numarası
-                "ad": f"Hasta_{idx+1}",
-                "soyad": f"Kaydı",
-                "dogum_yili": dogum_yili,
-                "yas": yas,
-                "cinsiyet": cinsiyet,
-                "telefon": f"0555{str(idx).zfill(7)}",
-                "email": f"hasta{idx+1}@email.com",
-                "evli_mi": "Evet" if int(row.get("evli_mi", 0)) == 1 else "Hayır",
-                "calisma_tipi": calisma_mapping.get(int(row.get("calisma_tipi", 0)), "Bilinmiyor"),
-                "ikamet_tipi": "Kentsel" if int(row.get("ikamet_tipi", 0)) == 1 else "Kırsal",
-                "kan_grubu": random.choice(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]),
-                "sigorta_numarasi": f"SGT{str(idx).zfill(8)}",
-                "aktif": True,
-                "basvuru_tarihi": datetime.now() - timedelta(days=random.randint(1, 365)),
-                "olusturma_tarihi": datetime.now(),
-            }
-            
-            db.hastalar.insert_one(hasta)
-            
-            # Yaşam tarzı verisi - CSV'den gelen verilerle
-            sigara_kodu = int(row.get("sigara_durumu", 0))
-            yasam_tarzi = {
-                "hasta_id": hasta["hasta_no"],
-                "sigara_durumu": sigara_mapping.get(sigara_kodu, "Hiç İçmedi"),
-                "alkol_durumu": random.choice(["Hiç", "Nadiren", "Hafta Sonu", "Düzenli"]),
-                "egzersiz_durumu": random.choice(["Hiç", "Nadiren", "Haftada 1-2", "Haftada 3+"]),
-                "gunluk_adim": random.randint(2000, 15000),
-                "beslenme_tipi": random.choice(["Dengeli", "Yüksek Tuz", "Yüksek Yağ", "Yüksek Şeker"]),
-                "gunluk_su": random.randint(1000, 3000),
-                "uyku_saati": random.randint(5, 9),
-                "stres_seviyesi": random.randint(1, 10),
-                "guncellenme_tarihi": datetime.now(),
-                "olusturma_tarihi": datetime.now(),
-            }
-            db.yasam_tarzi.insert_one(yasam_tarzi)
-            
-            # Tıbbi kayıt oluştur (CSV'deki sağlık verileriyle)
-            if random.random() > 0.5:  # %50 hastaya tıbbi kayıt ekle
-                tibbi_kayit = {
-                    "kayit_no": f"TK-{str(idx + 1).zfill(5)}",
-                    "hasta_id": hasta["hasta_no"],
-                    "doktor_id": random.choice(["KL-0001", "KL-0002"]),
-                    "kayit_tarihi": datetime.now() - timedelta(days=random.randint(1, 180)),
-                    "ziyaret_tipi": random.choice(["Rutin Kontrol", "Acil", "Takip"]),
-                    "sikayet": random.choice(SIKAYET_LISTESI),
-                    "tanı": random.choice(TANI_LISTESI),
-                    "hipertansiyon": bool(int(row.get("hipertansiyon", 0))),
-                    "kalp_hastaligi": bool(int(row.get("kalp_hastaligi", 0))),
-                    "ortalama_seker": float(row.get("ortalama_seker", 0)),
-                    "vucut_kitle_indeksi": float(row.get("vucut_kitle_indeksi", 0)),
-                    "notlar": "CSV verisinden yüklendi",
-                    "olusturma_tarihi": datetime.now(),
-                }
-                db.tibbi_kayitlar.insert_one(tibbi_kayit)
-        
-        print(f"✅ {db.hastalar.count_documents({})} hasta yüklendi")
-        print(f"✅ {db.yasam_tarzi.count_documents({})} yaşam tarzı kaydı yüklendi")
-        print(f"✅ {db.tibbi_kayitlar.count_documents({})} tıbbi kayıt yüklendi\n")
-        return True
-        
+        df = pd.read_csv(csv_yolu)
+        print(f"  CSV okundu: {len(df)} satır")
     except FileNotFoundError:
-        print("⚠️  CSV dosyası bulunamadı. Örnek veri kullanılacak.\n")
+        print(f"  ⚠️   CSV bulunamadı: {csv_yolu}")
+        print("       Örnek veri ile devam edilecek.")
         return False
     except Exception as e:
-        print(f"❌ CSV yükleme hatası: {str(e)}\n")
+        print(f"  ❌  CSV okuma hatası: {e}")
         return False
 
-def hasta_verisi_yukle_ornekler(db):
-    """Örnek hasta verileri oluşturur."""
-    print("\n🏥 ÖRNEK HASTA VERİSİ OLUŞTURULUYOR...")
-    print("-" * 60)
-    
-    if db.hastalar.count_documents({}) > 0:
-        print(f"ℹ️  Hastalar zaten yüklü ({db.hastalar.count_documents({})}")
-        return
-    
-    örnek_hastalar = []
-    for i in range(1, 101):  # 100 örnek hasta
-        hasta = {
-            "hasta_no": f"HS-{str(i).zfill(4)}",
-            "tc_no": f"{10000000000 + i}",
-            "ad": f"Örnek_{i}",
-            "soyad": f"Hastası",
-            "yas": random.randint(18, 85),
-            "cinsiyet": random.choice(["Erkek", "Kadın"]),
-            "telefon": f"0555{str(i).zfill(7)}",
-            "email": f"hasta{i}@example.com",
-            "adres": f"{i}. Sokak Ev {i}",
-            "sehir": random.choice(["İstanbul", "Ankara", "İzmir", "Gaziantep"]),
-            "kan_grubu": random.choice(["A+", "O+", "B+"]),
-            "sigorta_numarasi": f"SGT{str(i).zfill(8)}",
-            "aktif": True,
-            "basvuru_tarihi": datetime.now() - timedelta(days=random.randint(1, 365)),
-            "olusturma_tarihi": datetime.now(),
-        }
-        örnek_hastalar.append(hasta)
-    
-    db.hastalar.insert_many(örnek_hastalar)
-    print(f"✅ {len(örnek_hastalar)} örnek hasta eklendi\n")
+    # Eski kayıtları temizle
+    db.hastalar.delete_many({})
+    db.tibbi_bilgiler.delete_many({})
+    db.yasam_tarzi.delete_many({})
 
-# ============================================================================
-# TIBBİ KAYIT YÜKLEME
-# ============================================================================
+    hastalar_lst    = []
+    tibbi_lst       = []
+    yasam_tarzi_lst = []
 
-def tibbi_kayitlar_yukle(db):
-    """Örnek tıbbi kayıtlar oluşturur."""
-    print("\n📋 TIBBİ KAYITLAR OLUŞTURULUYOR...")
-    print("-" * 60)
-    
-    db.tibbi_kayitlar.delete_many({})
-    
-    hastalar = list(db.hastalar.find({}, {"hasta_no": 1, "_id": 0}))
-    doktorlar = list(db.kullanicilar.find({"rol": "doktor"}, {"kullanici_no": 1, "_id": 0}))
-    
-    if not hastalar or not doktorlar:
-        print("⚠️  Doktor veya hasta verisi bulunamadı!\n")
-        return
-    
-    kayit_sayisi = 0
-    for hasta in hastalar[:50]:  # İlk 50 hastaya muayene kaydı ekle
-        # Rastgele 1-3 muayene kaydı
-        muayene_sayisi = random.randint(1, 3)
-        
-        for j in range(muayene_sayisi):
-            kayit = {
-                "kayit_no": f"TK-{str(kayit_sayisi + 1).zfill(5)}",
-                "hasta_id": hasta["hasta_no"],
-                "doktor_id": random.choice(doktorlar)["kullanici_no"],
-                "kayit_tarihi": datetime.now() - timedelta(days=random.randint(1, 180)),
-                "ziyaret_tipi": random.choice(["Rutin Kontrol", "Acil", "Takip"]),
-                "sikayet": random.choice(SIKAYET_LISTESI),
-                "tanı": random.choice(TANI_LISTESI),
-                "ilaç_reçetesi": [
-                    {
-                        "ilaç_adi": "Aspirin",
-                        "doz": "100mg",
-                        "sıklık": "Günde 1 defa",
-                        "süre": 30
-                    }
-                ] if random.random() > 0.3 else [],
-                "notlar": "Hasta genel durumu iyi, takip gerekir.",
-                "tavsiye": "Düzenli egzersiz, sağlıklı beslenme",
-                "olusturma_tarihi": datetime.now(),
-            }
-            db.tibbi_kayitlar.insert_one(kayit)
-            kayit_sayisi += 1
-    
-    print(f"✅ {kayit_sayisi} tıbbi kayıt oluşturuldu\n")
+    doktor_idleri = [d["doktor_id"] for d in DOKTOR_LISTESI]
 
-# ============================================================================
-# RİSK TAHMİNİ YÜKLEME
-# ============================================================================
+    for idx, satir in df.iterrows():
+        hasta_id = f"HS-{str(idx + 1).zfill(5)}"
+        kayit_id = f"TK-{str(idx + 1).zfill(5)}"
 
-def risk_tahminleri_yukle(db):
-    """Örnek risk tahmin kayıtları oluşturur."""
-    print("\n🎯 RİSK TAHMİNLERİ OLUŞTURULUYOR...")
-    print("-" * 60)
-    
-    db.risk_tahminleri.delete_many({})
-    
-    hastalar = list(db.hastalar.find({}, {"hasta_no": 1, "_id": 0}))[:50]
-    
-    tahmin_sayisi = 0
-    for hasta in hastalar:
-        # Rastgele risk puanı (risk faktörlerine bağlı)
-        risk_skoru = random.uniform(0, 1)
-        
-        if risk_skoru < 0.33:
-            risk_seviyesi = "Düşük"
-            oneri = "Düzenli sağlık kontrolleri yeterli"
-        elif risk_skoru < 0.66:
-            risk_seviyesi = "Orta"
-            oneri = "Aylık kontrollere geliniz. Yaşam tarzı değişikliği önerilir."
-        else:
-            risk_seviyesi = "Yüksek"
-            oneri = "Acil doktor danışması alınız. Hastaneye başvurunuz."
-        
-        tahmin = {
-            "tahmin_no": f"TP-{str(tahmin_sayisi + 1).zfill(5)}",
-            "hasta_id": hasta["hasta_no"],
-            "model_versiyon": "1.0-RandomForest",
-            "risk_skoru": round(risk_skoru, 4),
-            "risk_seviyesi": risk_seviyesi,
-            "tahmin_tarihi": datetime.now() - timedelta(days=random.randint(0, 30)),
-            "giriş_parametreleri": {
-                "yas": random.randint(18, 85),
-                "cinsiyet": random.choice(["Erkek", "Kadın"]),
-                "hipertansiyon": random.randint(0, 1),
-                "kalp_hastaligi": random.randint(0, 1),
-                "sigara_durumu": random.choice(["Hiç", "Eski", "Halen"]),
-            },
-            "oneri": oneri,
-            "onay_durumu": random.choice(["Beklemede", "Onaylandı"]),
-            "olusturma_tarihi": datetime.now(),
-        }
-        db.risk_tahminleri.insert_one(tahmin)
-        tahmin_sayisi += 1
-    
-    print(f"✅ {tahmin_sayisi} risk tahmin kaydı oluşturuldu\n")
+        yas = int(satir.get("yas", 0))
 
-# ============================================================================
-# ANA FONKSİYON
-# ============================================================================
+        # ── hastalar koleksiyonu ────────────────────────────────
+        hastalar_lst.append({
+            "hasta_id":     hasta_id,
+            "ad":           f"Hasta",
+            "soyad":        f"{str(idx + 1).upper()}",
+            "yas":          yas,
+            "cinsiyet":     CINSIYET.get(int(satir.get("cinsiyet", 0)), "Erkek"),
+            "telefon":      f"0555{str(idx).zfill(7)}",
+            "email":        f"hasta{idx + 1}@ornek.com",
+            "kayit_tarihi": datetime.now(),
+            "aktif":        True,
+        })
 
-def veritabani_doldir():
-    """Tüm örnek verileri yükler."""
-    print("\n" + "="*60)
-    print("🚀 VERİTABANI SEED SÜRECI BAŞLATILIYOR")
-    print("="*60)
-    
-    db = baglanti_olustur()
-    if db is None:
-        print("❌ Veritabanı bağlantısı başarısız!")
-        return False
-    
-    # Şema oluştur
-    koleksiyonlari_olustur()
-    
-    # Verileri yükle
-    doktor_verisi_yukle(db)
-    
-    # CSV'den yükle, başarısız olursa örnek veri kullan
-    if not hasta_verisi_yukle_csv(db):
-        hasta_verisi_yukle_ornekler(db)
-    
-    tibbi_kayitlar_yukle(db)
-    risk_tahminleri_yukle(db)
-    
-    # Özet
-    print("\n" + "="*60)
-    print("📊 VERİTABANI YÜKLEME ÖZETI")
-    print("="*60)
-    print(f"✅ Doktor/Kullanıcı: {db.kullanicilar.count_documents({})}")
-    print(f"✅ Hasta: {db.hastalar.count_documents({})}")
-    print(f"✅ Tıbbi Kayıt: {db.tibbi_kayitlar.count_documents({})}")
-    print(f"✅ Yaşam Tarzı: {db.yasam_tarzi.count_documents({})}")
-    print(f"✅ Risk Tahminleri: {db.risk_tahminleri.count_documents({})}")
-    print("="*60 + "\n")
-    
+        # ── tibbi_bilgiler koleksiyonu ──────────────────────────
+        tibbi_lst.append({
+            "kayit_id":             kayit_id,
+            "hasta_id":             hasta_id,
+            "doktor_id":            random.choice(doktor_idleri),
+            "muayene_tarihi":       datetime.now(),
+            "hipertansiyon":        int(satir.get("hipertansiyon", 0)),
+            "kalp_hastaligi":       int(satir.get("kalp_hastaligi", 0)),
+            "ortalama_seker":       float(satir.get("ortalama_seker", 0.0)),
+            "vucut_kitle_indeksi":  float(satir.get("vucut_kitle_indeksi", 0.0)),
+            "sikayet":              "",
+            "tani_notu":            "CSV verisinden aktarıldı.",
+            "ilac_recetesi":        [],
+            "olusturma_tarihi":     datetime.now(),
+        })
+
+        # ── yasam_tarzi koleksiyonu ─────────────────────────────
+        yasam_tarzi_lst.append({
+            "hasta_id":         hasta_id,
+            "evli_mi":          EVLILIK.get(int(satir.get("evli_mi", 0)), "Hayır"),
+            "calisma_tipi":     CALISMA.get(int(satir.get("calisma_tipi", 0)), "Özel Sektör"),
+            "ikamet_tipi":      IKAMET.get(int(satir.get("ikamet_tipi", 0)), "Kentsel"),
+            "sigara_durumu":    SIGARA.get(int(satir.get("sigara_durumu", 0)), "Hiç İçmedi"),
+            "guncelleme_tarihi": datetime.now(),
+        })
+
+    # ── Toplu ekleme (insert_many ile çok daha hızlı) ──────────
+    YIGIN = 1000   # Her seferinde 1000 kayıt ekle
+
+    for i in range(0, len(hastalar_lst), YIGIN):
+        db.hastalar.insert_many(hastalar_lst[i:i + YIGIN])
+
+    for i in range(0, len(tibbi_lst), YIGIN):
+        db.tibbi_bilgiler.insert_many(tibbi_lst[i:i + YIGIN])
+
+    for i in range(0, len(yasam_tarzi_lst), YIGIN):
+        db.yasam_tarzi.insert_many(yasam_tarzi_lst[i:i + YIGIN])
+
+    h  = db.hastalar.count_documents({})
+    tb = db.tibbi_bilgiler.count_documents({})
+    yt = db.yasam_tarzi.count_documents({})
+
+    print(f"  ✅  {h} hasta  |  {tb} tıbbi kayıt  |  {yt} yaşam tarzı eklendi.")
     return True
 
+
+def ornek_veri_yukle(db, sayi: int = 50):
+    """CSV yoksa elle yazılmış 50 örnek hasta üretir."""
+    print(f"\n[2/4] {sayi} örnek hasta oluşturuluyor...")
+
+    if db.hastalar.count_documents({}) > 0:
+        print("  ℹ️   Zaten veri var, atlanıyor.")
+        return
+
+    isimler  = ["Ahmet", "Mehmet", "Ali", "Fatma", "Ayşe",
+                "Zeynep", "Mustafa", "Hasan", "Hüseyin", "Emine"]
+    soyisimler = ["Yılmaz", "Kaya", "Demir", "Çelik", "Şahin",
+                  "Arslan", "Doğan", "Aydın", "Yıldız", "Güneş"]
+
+    doktor_idleri = [d["doktor_id"] for d in DOKTOR_LISTESI]
+
+    hastalar_lst    = []
+    tibbi_lst       = []
+    yasam_tarzi_lst = []
+
+    for i in range(sayi):
+        hasta_id = f"HS-{str(i + 1).zfill(5)}"
+        kayit_id = f"TK-{str(i + 1).zfill(5)}"
+        yas      = random.randint(30, 82)
+
+        hastalar_lst.append({
+            "hasta_id":     hasta_id,
+            "ad":           random.choice(isimler),
+            "soyad":        random.choice(soyisimler).upper(),
+            "yas":          yas,
+            "cinsiyet":     random.choice(["Erkek", "Kadın"]),
+            "telefon":      f"0555{str(i).zfill(7)}",
+            "email":        f"hasta{i+1}@ornek.com",
+            "kayit_tarihi": datetime.now(),
+            "aktif":        True,
+        })
+
+        tibbi_lst.append({
+            "kayit_id":             kayit_id,
+            "hasta_id":             hasta_id,
+            "doktor_id":            random.choice(doktor_idleri),
+            "muayene_tarihi":       datetime.now(),
+            "hipertansiyon":        random.choice([0, 1]),
+            "kalp_hastaligi":       random.choice([0, 0, 0, 1]),
+            "ortalama_seker":       round(random.uniform(60, 280), 2),
+            "vucut_kitle_indeksi":  round(random.uniform(18, 50), 1),
+            "sikayet":              random.choice([
+                "Baş dönmesi", "Göğüs ağrısı",
+                "Nefes darlığı", "Halsizlik", ""
+            ]),
+            "tani_notu":            "Rutin kontrol.",
+            "ilac_recetesi":        [],
+            "olusturma_tarihi":     datetime.now(),
+        })
+
+        yasam_tarzi_lst.append({
+            "hasta_id":         hasta_id,
+            "evli_mi":          random.choice(["Evet", "Hayır", "Eski"]),
+            "calisma_tipi":     random.choice(["Özel Sektör", "Kamu", "Emekli"]),
+            "ikamet_tipi":      random.choice(["Kentsel", "Kırsal"]),
+            "sigara_durumu":    random.choice(["Hiç İçmedi", "Eski İçici", "Halen İçiyor"]),
+            "guncelleme_tarihi": datetime.now(),
+        })
+
+    db.hastalar.insert_many(hastalar_lst)
+    db.tibbi_bilgiler.insert_many(tibbi_lst)
+    db.yasam_tarzi.insert_many(yasam_tarzi_lst)
+
+    print(f"  ✅  {sayi} örnek hasta, tıbbi kayıt ve yaşam tarzı verisi eklendi.")
+
+
+def veritabanini_hazirla(
+    csv_yolu: str = "data/processed/temizlenmis_hasta_verisi.csv"
+):
+    """
+    Veritabanını sıfırdan kurar ve örnek verilerle doldurur.
+    Çalıştırma sırası: şema → doktorlar → hastalar → özet
+    """
+    print("\n" + "═" * 55)
+    print("  VERİTABANI HAZIRLANMAYA BAŞLIYOR")
+    print("═" * 55)
+
+    db = baglanti_olustur()
+    if db is None:
+        print("❌ Veritabanına bağlanılamadı. MongoDB çalışıyor mu?")
+        return False
+
+    # 1. Şema ve indeksler
+    print("\n[0/4] Şema ve indeksler kontrol ediliyor...")
+    sema_olustur()
+
+    # 2. Doktorlar
+    doktorlari_yukle(db)
+
+    # 3. Hastalar (CSV varsa oradan, yoksa örnekle)
+    if not hastalari_yukle_csv(db, csv_yolu):
+        ornek_veri_yukle(db, sayi=50)
+
+    # 4. Özet tablo
+    print("\n" + "─" * 55)
+    print("[4/4] YÜKLEME ÖZETI")
+    print("─" * 55)
+    koleksiyonlar = [
+        "doktorlar", "hastalar",
+        "tibbi_bilgiler", "yasam_tarzi", "inme_risk_tahminleri"
+    ]
+    for ad in koleksiyonlar:
+        sayi = db[ad].count_documents({})
+        print(f"  {ad:<30}  →  {sayi:>6} kayıt")
+    print("─" * 55)
+    print("✅ Veritabanı hazır.\n")
+    return True
+
+
 if __name__ == "__main__":
-    veritabani_doldir()
+    veritabanini_hazirla()
