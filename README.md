@@ -41,7 +41,7 @@ Bu sayede, çok sayıda risk faktörüne sahip genç hastalar gözden kaçırıl
 ├── api/                # Flask REST API uç noktaları (Routing & Controllers)
 ├── data/               # Kaggle inme veri setleri ve işlenmiş veriler
 ├── database/           # MongoDB Singleton bağlantı, şema doğrulama ve veri besleme modülleri
-├── docs/               # Akademik proje dokümantasyonu ve Türkçe Viki (WIKI_TR.md)
+├── docs/               # Akademik proje dokümantasyonu ve Proje Vikisi (WIKI_TR.md)
 ├── frontend/           # Çift modlu (Online/Offline) Tek Sayfa Web Uygulaması (SPA)
 ├── model/              # ML eğitim hattı (SMOTE & GBC) ve hibrit risk tahmin modülü
 ├── tests/              # Birim ve entegrasyon test senaryoları
@@ -98,7 +98,7 @@ streamlit run doktor_giris_ekranı.py
 - [x] Streamlit Doktor Portalı oturum ve şifre sıfırlama yönetimi
 - [x] HTML5 / Vanilla JS Glassmorphism SPA (Offline/Online Çift Modlu Web Arayüzü)
 - [x] Kapsamlı sistem entegrasyon testlerinin tamamlanması
-- [x] Kapsamlı Türkçe Akademik Proje Dokümantasyonu (Wiki) ve GitHub Wiki yayını
+- [x] Kapsamlı Akademik Proje Dokümantasyonu (Wiki) ve GitHub Wiki yayını
 
 ---
 

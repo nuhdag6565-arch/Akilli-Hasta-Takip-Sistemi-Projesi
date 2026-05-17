@@ -3,8 +3,6 @@
 > **Kapsamlı Akademik, Teknik ve Klinik Proje Referans Kılavuzu**
 > 
 > * **Üniversite & Bölüm**: Fırat Üniversitesi, Yazılım Mühendisliği Bölümü (Yazılım Tasarımı ve Mimarısı / Mezuniyet Projesi)
-> * **Dil**: Akademik ve Teknik Türkçe 🇹🇷
-> * **Yıl**: 2026
 > * **Durum**: Üretime Hazır (Production-Ready) ✅
 
 ---
@@ -16,7 +14,7 @@
 4. [Bölüm 4: Veritabanı Modellemesi ve Ayrıntılı MongoDB JSON Şemaları](#bölüm-4-veritabanı-modellemesi-ve-ayrıntılı-mongodb-json-şemaları)
 5. [Bölüm 5: REST API Uç Noktaları Ayrıntılı Referans Kılavuzu](#bölüm-5-rest-api-uç-noktaları-ayrıntılı-referans-kılavuzu)
 6. [Bölüm 6: Teknik Kurulum, Yapılandırma ve Çalıştırma Kılavuzu](#bölüm-6-teknik-kurulum-yapılandırma-ve-çalıştırma-kılavuzu)
-7. [Bölüm 7: Proje Yönetimi, Scrum Ekip Rolleri ve Haftalık Gelişim Günlüğü](#bölüm-7-proje-yönetimi-scrum-ekip-rolleri-ve-haftalık-gelişim-günlüğü)
+7. [Bölüm 7: Proje Yönetimi ve Haftalık Gelişim Günlüğü](#bölüm-7-proje-yönetimi-ve-haftalık-gelişim-günlüğü)
 
 ---
 
