@@ -87,20 +87,7 @@ streamlit run doktor_giris_ekranı.py
 ```
 * **Tek Sayfa Arayüzünü (SPA) Açmak İçin**: Tarayıcınızdan doğrudan `frontend/index.html` dosyasını açmanız yeterlidir.
 
----
 
-## 👥 Geliştirici Ekip Rolleri (The Scrum Team)
-
-| Geliştirici | Proje Rolü / Katkısı |
-|:---|:---|
-| **Dr. Nuh Dağ** | **Scrum Master / Database Architect**: MongoDB Singleton yapısı, veritabanı JSON Şema ve İndeks tasarımı. |
-| **Mustafa Haccar** | **Lead Architect / System Analyst**: Sistem analiz tasarımı, ERD şemaları ve tıbbi iş gereksinimlerinin çıkarılması. |
-| **Amr Khaled** | **Lead ML / Backend Engineer**: SMOTE sınıf dengeli GBM eğitim hattı, predict.py hibrit motoru ve Flask API. |
-| **Yasmin Hammuş** | **Integration & Docs Specialist**: Arayüzlerin Flask API entegrasyon kontrolü, klinik terim denetimi ve entegrasyon yönetimi. |
-| **Necmihan Aksu** | **Quality Assurance Lead (QA)**: Birim test senaryolarının kurgulanması, sınır değer doğrulama ve testler. |
-| **Aslıhan İlhan** | **DevOps & Environments Engineer**: Bağımlılık paketleme, sanal ortam kurulumları ve sunucu hazırlıkları. |
-
----
 
 ## 📋 Proje Durum Kontrol Listesi (Deliverables Checklist)
 - [x] Kaggle inme veri setinin temizlenmesi ve veri ön işleme modülü

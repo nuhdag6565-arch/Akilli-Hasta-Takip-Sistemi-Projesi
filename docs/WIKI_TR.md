@@ -523,29 +523,10 @@ Bu bölüm, sistemin yerel veya canlı bir sunucu ortamında sıfırdan kurulmas
 
 ---
 
-## Bölüm 7: Proje Yönetimi, Scrum Ekip Rolleri ve Haftalık Gelişim Günlüğü
 
-### 7.1 Geliştirici Ekip Rolleri ve İş Bölümü (Scrum Team Roles)
-Proje, çevik yazılım geliştirme (Scrum) metodolojilerine uygun olarak roller dağıtılarak hayata geçirilmiştir:
+## Bölüm 7: Proje Yönetimi ve Haftalık Gelişim Günlüğü
 
-* **Dr. Nuh Dağ (Proje Yöneticisi & Veritabanı Mimarı - Scrum Master)**:
-  * MongoDB şemalarının tasarımı, JSON Schema doğrulama mekanizmalarının ve performans indekslerinin kodlanması.
-  * Veritabanının tekil bağlantı (Singleton) yapısının kurulması, şema kurulum kodlarının [schema.py](file:///c:/Users/user/Desktop/333/database/schema.py) ve ilk yükleme veri scriptlerinin [seed_data.py](file:///c:/Users/user/Desktop/333/database/seed_data.py) hazırlanması.
-* **Mustafa Haccar (Yazılım Tasarımı & Analiz Lideri - Lead Architect)**:
-  * Proje akış mimarisinin çizilmesi, varlık ilişki şemalarının (ERD) kurgulanması.
-  * İnme risk faktörlerinin literatür araştırması ve tıbbi gereksinimlerin yazılım diline çevrilmesi.
-* **Amr Khaled (Yapay Zekâ ve Makine Öğrenmesi Mühendisi - Lead ML Engineer)**:
-  * Kaggle veri setinin SMOTE ile dengelenmesi ve Gradient Boosting Classifier modelinin eğitilmesi.
-  * Eğitilmiş model dosyalarının (`.pkl`) dışa aktarılması, hibrit Framingham birleştirme formülünün [predict.py](file:///c:/Users/user/Desktop/333/model/predict.py) içerisinde kodlanması ve Flask REST API'nin yazılması.
-* **Yasmin Hammuş (Entegrasyon & Teknik Dokümantasyon Sorumlusu - Integration Lead)**:
-  * Sunum katmanı ile servis katmanının entegrasyon süreçlerinin yönetimi.
-  * Proje içi terimlerin tıp terminolojisine ve proje standartlarına uygunluğunun denetlenmesi ve dokümante edilmesi.
-* **Necmihan Aksu (Kalite Güvence & Gereksinim Analisti - QA Lead)**:
-  * Fonksiyonel ve fonksiyonel olmayan gereksinimlerin (FR-01'den FR-06'ya kadar) test senaryolarının hazırlanması, sisteme girilen verilerin mantıksal sınırlarının doğrulanması.
-* **Aslıhan İlhan (Ortam Yönetimi & DevOps Mühendisi - DevOps Lead)**:
-  * Geliştirme ortamlarının hazırlanması, Python sanal ortamlarının yönetimi ve bağımlılıkların `requirements.txt` altında paketlenmesi.
-
-### 7.2 Haftalık Gelişim Günlüğü ve Değişiklik Sürüm Geçmişi (Weekly Changelogs)
+### 7.1 Haftalık Gelişim Günlüğü ve Değişiklik Sürüm Geçmişi (Weekly Changelogs)
 
 #### 📅 1. Hafta: Planlama ve Ham Veri Analizi
 * Git sürüm kontrol sisteminin ve ana dalların (main/dev branches) yapılandırılması.
