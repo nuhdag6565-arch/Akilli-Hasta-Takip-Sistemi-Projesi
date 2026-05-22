@@ -364,3 +364,23 @@ Projenin tüm bileşenleri (Python altyapısı, veri modelleri ve UI tasarımlar
 - < 10K hasta: Single Instance
 - 10K-100K: Replica Set
 - > 100K: Sharding
+
+## veritabani_tasarimi.md Dokümantasyonu
+
+**Sorumlu:** Nuh Dağ
+**Dosya Konumu:** docs/veritabani_tasarimi.md
+
+### İçerik Özeti:
+- MongoDB seçim gerekçesi (vs Cassandra, Redis, CouchDB)
+- 6 koleksiyon şema tasarımı
+- İndeks stratejisi (15+ indeks)
+- Performans metrikleri
+- Yedekleme stratejisi
+- Kurulum kılavuzu
+
+### Performans Sonuçları:
+- TC ile hasta ara: 2-5ms
+- Hasta muayene geçmişi: 10-20ms
+- Yüksek riskli hastalar: 15-30ms
+
+### Durum: ✅ Üretim Hazır
