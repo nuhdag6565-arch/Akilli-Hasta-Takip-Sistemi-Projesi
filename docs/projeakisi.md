@@ -474,3 +474,121 @@ eğiten ve kaydeden modül.
 4. Model eğitimi
 5. Değerlendirme
 6. Model kaydetme (artifacts/)
+
+## Tests Dokümantasyonu
+
+**Dosya:** tests/test_database.py
+**Sorumlu:** Nuh Dağ
+**Versiyon:** 3.0
+
+### Test Sınıfları:
+- T01_Baglanti: MongoDB bağlantı testleri
+- T02_HastaEkleme: Hasta CRUD testleri
+- T03_TibbiKayit: Tıbbi kayıt testleri
+- T04_YasamTarzi: Yaşam tarzı testleri
+- T05_RiskTahmini: Risk tahmini testleri
+- T06_Doktor: Doktor hesap testleri
+
+### Test Sayısı: 20+ test senaryosu
+
+### Çalıştırma:
+python tests/test_database.py
+
+### test_setup.py
+
+**Açıklama:** Sistem kurulum doğrulama testi.
+Tüm bağımlılıkların kurulu olduğunu kontrol eder.
+
+**Kontrol Edilen Kütüphaneler:**
+- pandas, numpy
+- pymongo
+- flask
+- scikit-learn
+- imbalanced-learn
+
+**Çalıştırma:**
+python tests/test_setup.py
+
+## agent.md Dokümantasyonu
+
+**Dosya Konumu:** agent.md
+**Açıklama:** Proje mimarisi, değişmez 
+kurallar ve teknik standartlar.
+
+### Değişmez Kurallar:
+- Model doğruluğu ≥%80 hiç düşürülmeyecek
+- SMOTE her zaman uygulanmalı
+- Canlı hasta verisi kullanılmayacak
+- Model doktor tanısının yerini almayacak
+
+### Ekip:
+- Nuh Dağ: Scrum Master / Veritabanı
+- Mustafa Haccar: Proje Analizi
+- Aslıhan İlhan: Geliştirme Ortamı
+- Amr Khaled: ML/Teknoloji
+- Necmihan Aksu: Gereksinim Toplama
+- Yasmin Hammuş: Dokümantasyon
+
+### Gelecek Planları:
+- TensorFlow derin öğrenme entegrasyonu
+- Mobil uygulama
+- Gerçek hastane veritabanı entegrasyonu
+- Arapça dil desteği
+
+  ## README.md Güncellemesi
+
+**Proje Durumu:** %100 Tamamlandı ✅
+
+### Tamamlanan Özellikler:
+- Kaggle veri seti temizleme ve ön işleme
+- MongoDB Singleton veritabanı ve indeksler
+- SMOTE + Gradient Boosting eğitim hattı
+- Framingham + GBM hibrit risk motoru (%70-%30)
+- Çok disiplinli klinik tavsiyeler
+- Streamlit Doktor Portalı
+- HTML5 Glassmorphism SPA (Online/Offline)
+- Entegrasyon testleri
+- Akademik dokümantasyon (WIKI_TR.md)
+
+### Çalıştırma:
+1. python database/schema.py
+2. python database/seed_data.py
+3. python api/app.py
+4. streamlit run doktor_giris_ekranı.py
+
+## doktor_giris_ekrani.py Dokümantasyonu
+
+**Dosya Konumu:** doktor_giris_ekranı.py
+**Sorumlu:** Nuh Dağ
+**Teknoloji:** Streamlit
+
+### Ekranlar:
+- Ekran 1: Giriş (TC + Şifre)
+- Ekran 2: Kayıt (TC + Ad + Soyad + Uzmanlık + Şifre)
+- Ekran 3: Şifre Sıfırlama (Güvenlik sorusu)
+- Ekran 4: Profil (Doktor bilgileri)
+
+### Özellikler:
+- Karanlık tema (Dark Mode)
+- SHA256 şifre güvenliği
+- Güvenlik sorusu ile şifre sıfırlama
+- Oturum yönetimi (Session State)
+
+### Çalıştırma:
+streamlit run doktor_giris_ekranı.py
+
+## requirements.txt Güncellemesi
+
+**Açıklama:** Projenin güncel kütüphane 
+bağımlılıkları listesi.
+
+### Ana Kütüphaneler:
+- pandas==3.0.2
+- numpy==2.4.4
+- scikit-learn==1.8.0
+- tensorflow==2.21.0
+- imbalanced-learn==0.14.1
+- pymongo==4.17.0
+- flask==3.1.3
+- streamlit==1.57.0
+- fastapi==0.136.1
