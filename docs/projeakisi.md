@@ -449,3 +449,28 @@ Flask API ve Streamlit tarafından kullanılır.
 - Düşük: Yıllık rutin kontrol
 - Orta: 1 ay içinde Nöroloji
 - Yüksek: ACİL Nöroloji + Kardiyoloji
+
+### model/train.py
+
+**Sorumlu:** Amr Khaled
+**Açıklama:** Gradient Boosting modelini 
+eğiten ve kaydeden modül.
+
+**Model Parametreleri:**
+- Algoritma: Gradient Boosting Classifier
+- n_estimators: 300
+- learning_rate: 0.05
+- max_depth: 4
+
+**Hedef Metrikler:**
+- Doğruluk: ≥%80
+- Precision: ≥%75
+- Recall: ≥%75
+
+**Eğitim Adımları:**
+1. CSV'den veri yükle (5111 kayıt)
+2. Ön işleme (eksik değer temizleme)
+3. SMOTE ile dengeleme
+4. Model eğitimi
+5. Değerlendirme
+6. Model kaydetme (artifacts/)
