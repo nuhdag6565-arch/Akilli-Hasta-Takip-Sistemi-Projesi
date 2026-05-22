@@ -320,3 +320,24 @@ Projenin tüm bileşenleri (Python altyapısı, veri modelleri ve UI tasarımlar
 **Durum:** Tamamlandı 🚀
 **Sorumlu:** Yasmin Hammuş (Dokümantasyon & Entegrasyon)
 
+## WIKI_TR.md Dokümantasyonu
+
+**Sorumlu:** Yasmin Hammuş
+**Dosya Konumu:** docs/WIKI_TR.md
+
+### İçerik Özeti:
+- Bölüm 1: İnme hastalığı klinik arka planı
+- Bölüm 2: 3 katmanlı sistem mimarisi
+- Bölüm 3: Yapay zeka modeli (Gradient Boosting + Framingham hibrit)
+- Bölüm 4: MongoDB veritabanı şemaları
+- Bölüm 5: REST API endpoint referans kılavuzu
+- Bölüm 6: Kurulum ve çalıştırma kılavuzu
+- Bölüm 7: Haftalık ilerleme raporu
+
+### Teknik Notlar:
+- Model: Gradient Boosting Classifier (%80+ doğruluk)
+- Hibrit formül: %70 Framingham + %30 ML skoru
+- Risk seviyeleri: Düşük / Orta / Yüksek
+- Veritabanı: MongoDB (5 koleksiyon)
+  
+
