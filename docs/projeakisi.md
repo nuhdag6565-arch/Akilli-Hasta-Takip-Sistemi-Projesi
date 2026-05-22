@@ -406,3 +406,17 @@ Projenin tüm bileşenleri (Python altyapısı, veri modelleri ve UI tasarımlar
 - Düşük Risk: Yeşil (#22c55e)
 - Orta Risk: Turuncu (#f59e0b)
 - Yüksek Risk: Kırmızı (#ef4444)
+
+  ### server.ps1
+
+**Konum:** frontend/
+**Açıklama:** Frontend dosyalarını 
+yerel sunucuda çalıştıran PowerShell scripti.
+
+**Özellikler:**
+- Adres: http://localhost:8080/
+- HTML, CSS, JS, PNG dosyalarını sunar
+- 404 hata yönetimi mevcut
+
+**Çalıştırma:**
+powershell -File server.ps1
