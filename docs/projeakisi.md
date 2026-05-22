@@ -420,3 +420,32 @@ yerel sunucuda çalıştıran PowerShell scripti.
 
 **Çalıştırma:**
 powershell -File server.ps1
+
+## Model Dokümantasyonu
+
+**Dosya:** model/predict.py
+**Sorumlu:** Amr Khaled
+**Versiyon:** 1.0
+
+### Açıklama:
+İnme riski tahmini yapan ML modülü.
+Flask API ve Streamlit tarafından kullanılır.
+
+### Hibrit Risk Formülü:
+%70 Framingham Klinik Skoru + %30 ML Skoru
+
+### Risk Seviyeleri:
+- Düşük: 0.00 - 0.10 (Yeşil)
+- Orta: 0.10 - 0.30 (Turuncu)
+- Yüksek: 0.30 - 1.00 (Kırmızı)
+
+### Ana Fonksiyonlar:
+- hasta_risk_tahmini(): Tek hasta tahmini
+- hasta_verisi_dogrula(): Veri doğrulama
+- _klinik_skor_hesapla(): Framingham skoru
+- _uzman_oneri_uret(): Uzman önerileri
+
+### Uzman Önerileri:
+- Düşük: Yıllık rutin kontrol
+- Orta: 1 ay içinde Nöroloji
+- Yüksek: ACİL Nöroloji + Kardiyoloji
