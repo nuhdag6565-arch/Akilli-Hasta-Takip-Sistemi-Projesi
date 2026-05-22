@@ -384,3 +384,25 @@ Projenin tüm bileşenleri (Python altyapısı, veri modelleri ve UI tasarımlar
 - Yüksek riskli hastalar: 15-30ms
 
 ### Durum: ✅ Üretim Hazır
+
+## Frontend Dokümantasyonu
+
+**Dosya Konumu:** frontend/index.html
+**Teknoloji:** HTML, CSS, JavaScript
+
+### Sayfalar:
+- Sayfa 1: Doktor giriş ekranı (TC + Şifre)
+- Sayfa 2: Doktor profil sayfası
+- Sayfa 3: Risk analizi sayfası
+
+### Özellikler:
+- Karanlık tema (Dark Mode)
+- Çevrimiçi/Çevrimdışı mod desteği
+- Risk metresi ve görsel uyarılar
+- Doktor kayıt ve şifre sıfırlama
+- Mobil uyumlu tasarım
+
+### Renkler:
+- Düşük Risk: Yeşil (#22c55e)
+- Orta Risk: Turuncu (#f59e0b)
+- Yüksek Risk: Kırmızı (#ef4444)
