@@ -340,4 +340,27 @@ Projenin tüm bileşenleri (Python altyapısı, veri modelleri ve UI tasarımlar
 - Risk seviyeleri: Düşük / Orta / Yüksek
 - Veritabanı: MongoDB (5 koleksiyon)
   
+## database_design.md Dokümantasyonu
 
+**Sorumlu:** Nuh Dağ (Veritabanı Mimarı)
+**Dosya Konumu:** docs/database_design.md
+**Sürüm:** 2.0
+
+### Koleksiyonlar:
+- kullanicilar: Doktor ve yönetici hesapları
+- hastalar: Hasta demografik bilgileri
+- yasam_tarzi: Sigara, alkol, egzersiz bilgileri
+- tibbi_kayitlar: Muayene ve ilaç reçeteleri
+- risk_tahminleri: ML model tahmin sonuçları
+- yasam_tarzi_degisiklikleri: Audit trail
+
+### Teknik Özellikler:
+- Veritabanı: MongoDB (NoSQL)
+- İndeks sayısı: 15+
+- Tepki süresi: < 100ms
+- Toplam veri: ~35 MB
+
+### Ölçeklenebilirlik:
+- < 10K hasta: Single Instance
+- 10K-100K: Replica Set
+- > 100K: Sharding
