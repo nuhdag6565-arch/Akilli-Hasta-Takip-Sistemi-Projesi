@@ -164,6 +164,26 @@ html,body{height:100%;overflow:hidden;font-family:'Inter',sans-serif;background:
 .cta p{color:var(--t2);font-size:.82rem;margin-bottom:20px;line-height:1.6}
 .ctab{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 
+/* Geçmiş analizler banner kartı */
+.hist-banner{
+  display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(135deg,rgba(99,102,241,.13),rgba(168,85,247,.09));
+  border:1.5px solid rgba(99,102,241,.32);
+  border-radius:var(--r);padding:18px 24px;margin-bottom:18px;
+  cursor:pointer;transition:border-color .2s,transform .18s,box-shadow .2s;gap:14px;
+}
+.hist-banner:hover{border-color:rgba(99,102,241,.7);transform:translateY(-2px);box-shadow:0 8px 24px rgba(99,102,241,.18)}
+.hist-banner-left{display:flex;align-items:center;gap:14px}
+.hist-banner-icon{font-size:1.8rem;flex-shrink:0}
+.hist-banner-title{font-size:.95rem;font-weight:700;color:var(--t1);margin-bottom:3px}
+.hist-banner-sub{font-size:.74rem;color:var(--t2);line-height:1.4}
+.hist-banner-right{display:flex;align-items:baseline;gap:5px;flex-shrink:0;text-align:right}
+.hist-banner-count{font-size:1.8rem;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1}
+.hist-banner-label{font-size:.72rem;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;align-self:center}
+.hist-banner-arrow{font-size:1.2rem;color:var(--accent);margin-left:6px;transition:transform .2s}
+.hist-banner:hover .hist-banner-arrow{transform:translateX(5px)}
+@media(max-width:600px){.hist-banner{flex-direction:column;align-items:flex-start}.hist-banner-right{align-self:flex-end}}
+
 /* ═══════════════════════════════════════════
    PAGE 3 — RİSK ANALİZİ
 ═══════════════════════════════════════════ */
@@ -228,6 +248,58 @@ html,body{height:100%;overflow:hidden;font-family:'Inter',sans-serif;background:
 /* Field section divider */
 .sec-head{display:flex;align-items:center;gap:10px;margin:18px 0 14px;font-size:.72rem;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.7px}
 .sec-head::after{content:'';flex:1;height:1px;background:rgba(99,102,241,.2)}
+
+/* ═══════════════════════════════════════════
+   PAGE 4 — KAYDEDİLMİŞ RİSKLER
+═══════════════════════════════════════════ */
+#pg-history{background:var(--bg)}
+.hw{max-width:1100px;margin:0 auto;padding:28px 22px}
+.hpage-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;gap:12px;flex-wrap:wrap}
+.hpage-head h2{font-size:1.25rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.hpage-sub{font-size:.76rem;color:var(--t2);margin-top:3px}
+
+/* Filtre bar */
+.hfbar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center}
+.hfbar input{flex:1;min-width:180px;padding:9px 13px;background:rgba(30,41,59,.55);border:1.5px solid rgba(99,102,241,.2);border-radius:var(--r);color:var(--t1);font-size:.84rem;font-family:inherit;outline:none}
+.hfbar input:focus{border-color:var(--accent)}
+.hfbar select{padding:9px 13px;background:rgba(30,41,59,.55);border:1.5px solid rgba(99,102,241,.2);border-radius:var(--r);color:var(--t1);font-size:.84rem;font-family:inherit;outline:none;-webkit-appearance:none;appearance:none;cursor:pointer}
+.hfbar select option{background:#1a2235}
+.hfbar select:focus{border-color:var(--accent)}
+
+/* Kayıt sayacı */
+.hcount{font-size:.75rem;color:var(--t3);white-space:nowrap;align-self:center}
+
+/* Risk kartları */
+.hlist{display:flex;flex-direction:column;gap:10px}
+.hcard{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;transition:border-color .2s,transform .2s;cursor:default}
+.hcard:hover{border-color:rgba(99,102,241,.38);transform:translateX(3px)}
+.hcard-left{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:72px}
+.hbadge{padding:5px 11px;border-radius:20px;font-size:.72rem;font-weight:700;text-align:center;white-space:nowrap}
+.hbadge.dusuk{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.25)}
+.hbadge.orta{background:rgba(245,158,11,.12);color:#fbbf24;border:1px solid rgba(245,158,11,.25)}
+.hbadge.yuksek{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25)}
+.hpct{font-size:1.45rem;font-weight:900;line-height:1}
+.hpct.dusuk{color:#4ade80}.hpct.orta{color:#fbbf24}.hpct.yuksek{color:#f87171}
+.hcard-mid{min-width:0}
+.hcard-date{font-size:.74rem;color:var(--t3);margin-bottom:5px}
+.hcard-params{display:flex;flex-wrap:wrap;gap:6px}
+.htag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(99,102,241,.09);border:1px solid rgba(99,102,241,.15);border-radius:20px;font-size:.7rem;color:var(--t2)}
+.htag.warn{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.18);color:#f87171}
+.hcard-right{}
+
+/* Boş durum */
+.hempty{text-align:center;padding:60px 20px;color:var(--t3)}
+.hempty-icon{font-size:3rem;margin-bottom:14px;opacity:.4}
+.hempty p{font-size:.84rem;color:var(--t2);line-height:1.8}
+
+/* Detay modal içeriği */
+.drow{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(99,102,241,.09);font-size:.83rem}
+.drow:last-child{border-bottom:none}
+.drow .dk{color:var(--t3);font-size:.75rem}
+.drow .dv{font-weight:600;color:var(--t1)}
+
+/* Yüklenme */
+.hloading{text-align:center;padding:50px;color:var(--t2);font-size:.84rem}
 
 /* ── responsive ── */
 @media(max-width:860px){
@@ -305,6 +377,7 @@ html,body{height:100%;overflow:hidden;font-family:'Inter',sans-serif;background:
       <span class="tdoc" id="navDoc"></span>
       <span class="api-dot api-off" id="apiBadge">● Yerel</span>
       <button class="btn bs bxs" onclick="navRisk()">Risk Analizi →</button>
+      <button class="btn bs bxs" onclick="navHistory()">📋 Geçmiş</button>
       <button class="btn bs bxs" onclick="doLogout()">Çıkış</button>
     </div>
   </nav>
@@ -328,6 +401,22 @@ html,body{height:100%;overflow:hidden;font-family:'Inter',sans-serif;background:
       <div class="sc"><span class="n" id="sKayit">—</span><span class="l">Kayıt Tarihi</span></div>
     </div>
 
+    <!-- GEÇMİŞ ANALİZLER KARTI -->
+    <div class="hist-banner" onclick="navHistory()">
+      <div class="hist-banner-left">
+        <div class="hist-banner-icon">📋</div>
+        <div>
+          <div class="hist-banner-title">Kaydedilmiş Risk Analizleri</div>
+          <div class="hist-banner-sub">Geçmişte yapılan tüm analizleri görüntüle, filtrele ve incele</div>
+        </div>
+      </div>
+      <div class="hist-banner-right">
+        <span class="hist-banner-count" id="hBannerCount">—</span>
+        <span class="hist-banner-label">kayıt</span>
+        <span class="hist-banner-arrow">→</span>
+      </div>
+    </div>
+
     <!-- INFO CARDS -->
     <div class="ig">
       <div class="ic"><div class="ii">🪪</div><div class="il">Doktor ID</div><div class="iv" id="iId">—</div></div>
@@ -344,6 +433,7 @@ html,body{height:100%;overflow:hidden;font-family:'Inter',sans-serif;background:
       <p>Hasta demografik ve klinik verilerini girerek yapay zeka modeli ile inme risk tahmini gerçekleştirin.</p>
       <div class="ctab">
         <button class="btn bp" onclick="navRisk()">🧠 Risk Analizi Yap</button>
+        <button class="btn bs" onclick="navHistory()">📋 Kaydedilmiş Riskler</button>
         <button class="btn bs" onclick="openMod('mPass')">🔑 Şifre Değiştir</button>
         <button class="btn bs" onclick="doLogout()">🚪 Çıkış Yap</button>
       </div>
@@ -359,6 +449,7 @@ html,body{height:100%;overflow:hidden;font-family:'Inter',sans-serif;background:
     <div class="tbrand"><span>🧠</span><span>Risk Analizi</span></div>
     <div class="tacts">
       <span class="tdoc" id="navDoc2"></span>
+      <button class="btn bs bxs" onclick="navHistory()">📋 Geçmiş</button>
       <button class="btn bs bxs" onclick="navProfile()">← Profilim</button>
       <button class="btn bs bxs" onclick="doLogout()">Çıkış</button>
     </div>
@@ -488,6 +579,55 @@ html,body{height:100%;overflow:hidden;font-family:'Inter',sans-serif;background:
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
+     SAYFA 4 — KAYDEDİLMİŞ RİSKLER
+═══════════════════════════════════════════════════════════ -->
+<div id="pg-history" class="pg">
+  <nav class="tbar">
+    <div class="tbrand"><span>📋</span><span>Kaydedilmiş Riskler</span></div>
+    <div class="tacts">
+      <span class="tdoc" id="navDoc3"></span>
+      <button class="btn bs bxs" onclick="navRisk()">Risk Analizi →</button>
+      <button class="btn bs bxs" onclick="navProfile()">← Profilim</button>
+      <button class="btn bs bxs" onclick="doLogout()">Çıkış</button>
+    </div>
+  </nav>
+
+  <div class="hw">
+    <div class="hpage-head">
+      <div>
+        <h2>📋 Kaydedilmiş Risk Analizleri</h2>
+        <div class="hpage-sub">Daha önce gerçekleştirilen tüm risk analizlerinin geçmişi</div>
+      </div>
+      <button class="btn bp bxs" onclick="loadHistory()">↻ Yenile</button>
+    </div>
+
+    <!-- İstatistik özeti -->
+    <div class="sg" id="hStatRow" style="margin-bottom:18px">
+      <div class="sc"><span class="n" id="hsToplam">—</span><span class="l">Toplam Analiz</span></div>
+      <div class="sc"><span class="n" id="hsYuksek" style="-webkit-text-fill-color:#f87171;color:#f87171">—</span><span class="l">Yüksek Risk</span></div>
+      <div class="sc"><span class="n" id="hsSon">—</span><span class="l">Son Analiz</span></div>
+    </div>
+
+    <!-- Filtre bar -->
+    <div class="hfbar">
+      <input type="text" id="hSearch" placeholder="🔍 Tarih, risk seviyesi veya parametre ara..." oninput="filterHistory()">
+      <select id="hFilter" onchange="filterHistory()">
+        <option value="">Tüm Seviyeler</option>
+        <option value="Yüksek">🔴 Yüksek</option>
+        <option value="Orta">🟡 Orta</option>
+        <option value="Düşük">🟢 Düşük</option>
+      </select>
+      <span class="hcount" id="hCountLbl"></span>
+    </div>
+
+    <!-- Liste -->
+    <div id="hList" class="hlist">
+      <div class="hloading">Yükleniyor...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
      MODALLER — tüm sayfaların SONUNDA, z-index:8000 ile her
      zaman üstte kalırlar (sayfalar z-index:1).
 ═══════════════════════════════════════════════════════════ -->
@@ -557,6 +697,20 @@ html,body{height:100%;overflow:hidden;font-family:'Inter',sans-serif;background:
           <button class="btn bp bsm" style="flex:1" onclick="forgotS2()">Şifremi Sıfırla</button>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- RİSK DETAY MODAL -->
+<div id="mDetail" class="ov" onclick="if(event.target===this)closeMod('mDetail')">
+  <div class="mc mlg">
+    <div class="mh">
+      <h3 id="mDetailTitle">📊 Risk Analizi Detayı</h3>
+      <button class="mx" onclick="closeMod('mDetail')">&times;</button>
+    </div>
+    <div class="mb" id="mDetailBody"></div>
+    <div class="mf">
+      <button class="btn bs bsm" onclick="closeMod('mDetail')">Kapat</button>
     </div>
   </div>
 </div>
@@ -661,13 +815,19 @@ function navTo(name) {
 function navProfile() { navTo('profile'); }
 function navRisk()    { navTo('risk'); }
 function navLogin()   { navTo('login'); }
+function navHistory() {
+  if (!doctor) { toast('Önce giriş yapın.', 'err'); return; }
+  set('navDoc3', `Dr. ${doctor.ad} ${doctor.soyad[0]}.`);
+  navTo('history');
+  loadHistory();
+}
 
 /* ════════════════════════════════════════════════════
    API KONTROL
 ════════════════════════════════════════════════════ */
 async function checkAPI() {
   try {
-    const r = await fetch(API + '/api/doktorlar', {signal: AbortSignal.timeout(2200)});
+    const r = await fetch(API + '/api/doktorlar', {signal: AbortSignal.timeout(5000)});
     apiOk = r.ok;
   } catch { apiOk = false; }
   ['apiBadge','apiBadge2'].forEach(id => {
@@ -675,6 +835,7 @@ async function checkAPI() {
     el.className = 'api-dot ' + (apiOk ? 'api-on' : 'api-off');
     el.textContent = apiOk ? '● API Bağlı' : '● Yerel Mod';
   });
+  if (!apiOk) setTimeout(checkAPI, 3000);
 }
 
 /* ════════════════════════════════════════════════════
@@ -827,17 +988,36 @@ function openForgot() {
   document.getElementById('sd2').className = 'sd';
   openMod('mForgot');
 }
-function forgotS1() {
+async function forgotS1() {
   const tc = document.getElementById('fTC').value.trim();
   if (!tcOk(tc)) { toast('Geçersiz TC.', 'err'); bad('fTC'); return; }
+
+  function _showStep2(soru) {
+    ftc = tc;
+    document.getElementById('fSoru').innerHTML = `<strong>Güvenlik Sorusu:</strong> ${soru}`;
+    document.getElementById('fs1').classList.add('hidden');
+    document.getElementById('fs2').classList.remove('hidden');
+    document.getElementById('sd1').className = 'sd dn';
+    document.getElementById('sd2').className = 'sd on';
+  }
+
+  if (apiOk) {
+    try {
+      const res  = await fetch(API + '/api/doktorlar/guvenlik-sorusu', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({tc_no: tc}),
+        signal: AbortSignal.timeout(4000),
+      });
+      const json = await res.json();
+      if (json.durum === 'basarili') { _showStep2(json.soru || GQ); return; }
+      toast(json.hata || 'Bu TC ile aktif doktor bulunamadı.', 'err'); bad('fTC'); return;
+    } catch { /* ağ hatası → localStorage'a düş */ }
+  }
+
   const doc = getD().find(d => d.tc_no === tc && d.aktif);
   if (!doc) { toast('Bu TC ile aktif doktor bulunamadı.', 'err'); bad('fTC'); return; }
-  ftc = tc;
-  document.getElementById('fSoru').innerHTML = `<strong>Güvenlik Sorusu:</strong> ${GQ}`;
-  document.getElementById('fs1').classList.add('hidden');
-  document.getElementById('fs2').classList.remove('hidden');
-  document.getElementById('sd1').className = 'sd dn';
-  document.getElementById('sd2').className = 'sd on';
+  _showStep2(GQ);
 }
 function forgotBack() {
   ftc = '';
@@ -846,13 +1026,36 @@ function forgotBack() {
   document.getElementById('sd1').className = 'sd on';
   document.getElementById('sd2').className = 'sd';
 }
-function forgotS2() {
+async function forgotS2() {
   const cev = document.getElementById('fCev').value.trim();
   const p1  = document.getElementById('fP1').value;
   const p2  = document.getElementById('fP2').value;
   if (!cev)          { toast('Cevap zorunludur.',         'err'); bad('fCev'); return; }
   if (p1.length < 6) { toast('Şifre en az 6 karakter.',  'err'); bad('fP1');  return; }
   if (p1 !== p2)     { toast('Şifreler eşleşmiyor.',     'err'); bad('fP2');  return; }
+
+  if (apiOk) {
+    try {
+      const res  = await fetch(API + '/api/doktorlar/sifre-sifirla', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({tc_no: ftc, guvenlik_cevabi: cev, yeni_sifre: p1, yeni_sifre_tekrar: p2}),
+        signal: AbortSignal.timeout(4000),
+      });
+      const json = await res.json();
+      if (json.durum === 'basarili') {
+        /* localStorage'daki şifreyi de güncelle (yerel modda da çalışsın) */
+        const docs = getD();
+        const idx  = docs.findIndex(d => d.tc_no === ftc);
+        if (idx > -1) { docs[idx].sifre = p1; setD(docs); }
+        closeMod('mForgot'); ftc = '';
+        toast('Şifreniz sıfırlandı! Giriş yapabilirsiniz.', 'ok');
+        return;
+      }
+      toast(json.hata || 'Güvenlik sorusu cevabı yanlış.', 'err'); bad('fCev'); return;
+    } catch { /* ağ hatası → localStorage'a düş */ }
+  }
+
   const docs = getD();
   const idx = docs.findIndex(d => d.tc_no === ftc && d.aktif);
   if (idx < 0) { toast('Doktor bulunamadı.', 'err'); return; }
@@ -867,18 +1070,62 @@ function forgotS2() {
 /* ════════════════════════════════════════════════════
    ŞİFRE DEĞİŞTİR
 ════════════════════════════════════════════════════ */
-function changePass() {
+function _localSifreGuncelle(yeniSifre) {
+  // localStorage ve bellekteki doctor nesnesini senkronize tutar
+  if (doctor) doctor.sifre = yeniSifre;
+  const docs = getD();
+  const i = docs.findIndex(d => d.tc_no === doctor.tc_no);
+  if (i > -1) { docs[i].sifre = yeniSifre; setD(docs); }
+}
+
+async function changePass() {
   if (!doctor) return;
   const old = document.getElementById('cpOld').value;
   const n1  = document.getElementById('cpNew').value;
   const n2  = document.getElementById('cpNew2').value;
-  if (!old||!n1||!n2)    { toast('Tüm alanları doldurun.', 'err'); return; }
-  if (old !== doctor.sifre){ toast('Mevcut şifre hatalı.', 'err'); bad('cpOld'); return; }
-  if (n1.length < 6)      { toast('Yeni şifre en az 6 karakter.', 'err'); bad('cpNew'); return; }
-  if (n1 !== n2)           { toast('Yeni şifreler eşleşmiyor.', 'err'); bad('cpNew2'); return; }
+  if (!old||!n1||!n2) { toast('Tüm alanları doldurun.', 'err'); return; }
+  if (n1.length < 6)  { toast('Yeni şifre en az 6 karakter.', 'err'); bad('cpNew'); return; }
+  if (n1 !== n2)       { toast('Yeni şifreler eşleşmiyor.', 'err'); bad('cpNew2'); return; }
+
+  // API üzerinden şifre güncelle
+  if (apiOk) {
+    try {
+      const res = await fetch(API + '/api/doktorlar/sifre-degistir', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          tc_no: doctor.tc_no,
+          eski_sifre: old,
+          yeni_sifre: n1,
+          yeni_sifre_tekrar: n2,
+        }),
+        signal: AbortSignal.timeout(5000),
+      });
+      const json = await res.json();
+      if (json.durum === 'basarili') {
+        // MongoDB güncellendi; localStorage ve bellek de senkronize et
+        _localSifreGuncelle(n1);
+        ['cpOld','cpNew','cpNew2'].forEach(x => document.getElementById(x).value='');
+        closeMod('mPass');
+        toast('Şifreniz güncellendi!', 'ok');
+        return;
+      }
+      toast(json.hata || 'Şifre güncellenemedi.', 'err');
+      if (json.hata && json.hata.includes('Mevcut')) bad('cpOld');
+      return;
+    } catch (e) {
+      // Endpoint bulunamadı (404 HTML) veya ağ hatası → localStorage fallback
+      console.warn('Şifre değiştirme API hatası:', e);
+    }
+  }
+
+  // localStorage fallback (çevrimdışı mod)
   const docs = getD();
   const i = docs.findIndex(d => d.tc_no === doctor.tc_no);
-  if (i > -1) { docs[i].sifre = n1; setD(docs); }
+  if (i < 0) { toast('Doktor kaydı bulunamadı.', 'err'); return; }
+  if (docs[i].sifre !== old) { toast('Mevcut şifre hatalı.', 'err'); bad('cpOld'); return; }
+  docs[i].sifre = n1;
+  setD(docs);
   doctor.sifre = n1;
   ['cpOld','cpNew','cpNew2'].forEach(x => document.getElementById(x).value='');
   closeMod('mPass');
@@ -907,6 +1154,15 @@ function loadProfile(doc) {
   const dn = `Dr. ${doc.ad} ${doc.soyad[0]}.`;
   set('navDoc',  dn);
   set('navDoc2', dn);
+  _updateBannerCount(doc.doktor_id);
+}
+
+function _updateBannerCount(doktorId) {
+  const key = 'IRS_ANA_' + doktorId;
+  let count = 0;
+  try { count = JSON.parse(localStorage.getItem(key) || '[]').length; } catch {}
+  const el = document.getElementById('hBannerCount');
+  if (el) el.textContent = count;
 }
 function set(id, v) { const el = document.getElementById(id); if(el) el.textContent = v; }
 function animN(id, target) {
@@ -1065,7 +1321,8 @@ async function calcRisk() {
     hipertansiyon: hiper, kalp_hastaligi: kalp,
     evli_mi: evli, calisma_tipi: cal, ikamet_tipi: ikamet,
     ortalama_seker: seker, vucut_kitle_indeksi: bmi,
-    sigara_durumu: sig
+    sigara_durumu: sig,
+    doktor_id: doctor ? doctor.doktor_id : '—',
   };
 
   /* Loading */
@@ -1188,6 +1445,27 @@ async function calcRisk() {
       set('sAnaliz', doctor.analiz);
     }
   }
+
+  /* Analizi localStorage geçmişine kaydet */
+  _analiziKaydet(payload, skor, src);
+}
+
+function _analiziKaydet(payload, skor, src) {
+  if (!doctor) return;
+  const key = 'IRS_ANA_' + doctor.doktor_id;
+  let arr = [];
+  try { arr = JSON.parse(localStorage.getItem(key) || '[]'); } catch {}
+  arr.unshift({
+    id:      'ana-' + Date.now(),
+    tarih:   new Date().toISOString(),
+    seviye:  skor >= 0.30 ? 'Yüksek' : skor >= 0.10 ? 'Orta' : 'Düşük',
+    yuzde:   Math.round(skor * 1000) / 10,
+    src,
+    girdi:   payload,
+  });
+  if (arr.length > 200) arr = arr.slice(0, 200);
+  localStorage.setItem(key, JSON.stringify(arr));
+  _updateBannerCount(doctor.doktor_id);
 }
 
 function animScore(id, target) {
@@ -1199,6 +1477,149 @@ function animScore(id, target) {
 }
 
 function saveRes()   { toast('Risk sonucu kaydedildi.', 'ok'); }
+
+/* ════════════════════════════════════════════════════
+   KAYDEDİLMİŞ RİSKLER
+════════════════════════════════════════════════════ */
+let _hAll = [];        // tüm kayıtlar (filtre öncesi)
+let _hFiltered = [];  // aktif görünüm (filtre sonrası)
+
+async function loadHistory() {
+  if (!doctor) return;
+  document.getElementById('hList').innerHTML = '<div class="hloading">⏳ Kayıtlar yükleniyor...</div>';
+
+  let records = [];
+  if (apiOk) {
+    try {
+      const res = await fetch(`${API}/api/doktorlar/${doctor.doktor_id}/risk-gecmisi?limit=200`, {
+        signal: AbortSignal.timeout(6000),
+      });
+      const json = await res.json();
+      if (json.durum === 'basarili') records = json.kayitlar || [];
+    } catch {}
+  }
+
+  // API boş döndüyse veya erişilemediyse localStorage'dan al
+  if (records.length === 0) {
+    const key = 'IRS_ANA_' + doctor.doktor_id;
+    try { records = JSON.parse(localStorage.getItem(key) || '[]'); } catch {}
+  }
+
+  _hAll = records;
+  _updateHStats(records);
+  renderHistory(records);
+}
+
+function filterHistory() {
+  const q   = (document.getElementById('hSearch').value || '').toLowerCase();
+  const sev = document.getElementById('hFilter').value;
+  let filtered = _hAll;
+  if (sev) filtered = filtered.filter(r => (r.risk_seviyesi || r.seviye) === sev);
+  if (q)   filtered = filtered.filter(r => JSON.stringify(r).toLowerCase().includes(q));
+  renderHistory(filtered);
+}
+
+
+
+function renderHistory(records) {
+  _hFiltered = records;
+  const el = document.getElementById('hList');
+  document.getElementById('hCountLbl').textContent = records.length + ' kayıt';
+
+  if (!records.length) {
+    el.innerHTML = `<div class="hempty"><div class="hempty-icon">📭</div><p>Henüz kaydedilmiş risk analizi bulunmuyor.<br>Risk Analizi sayfasından yeni bir analiz gerçekleştirin.</p></div>`;
+    return;
+  }
+
+  el.innerHTML = records.map((r, idx) => {
+    const sev  = r.risk_seviyesi || r.seviye || '—';
+    const pct  = r.risk_yuzdesi  !== undefined ? r.risk_yuzdesi : (r.yuzde !== undefined ? r.yuzde : '—');
+    const cls  = sev === 'Yüksek' ? 'yuksek' : sev === 'Orta' ? 'orta' : 'dusuk';
+    const tarih = _fmtHistDate(r.tahmin_tarihi || r.tarih);
+    const g    = r.model_girdileri || r.girdi || {};
+    const tags = _buildTags(g, sev);
+    return `
+    <div class="hcard">
+      <div class="hcard-left">
+        <div class="hpct ${cls}">${typeof pct === 'number' ? pct.toFixed(1) : pct}%</div>
+        <div class="hbadge ${cls}">${sev}</div>
+      </div>
+      <div class="hcard-mid">
+        <div class="hcard-date">📅 ${tarih}</div>
+        <div class="hcard-params">${tags}</div>
+      </div>
+      <div class="hcard-right">
+        <button class="btn bs bxs" onclick="showDetail(${idx})">Detay</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function _buildTags(g, sev) {
+  const tags = [];
+  if (g.yas)               tags.push(`<span class="htag">👤 ${g.yas} yaş</span>`);
+  if (g.cinsiyet)          tags.push(`<span class="htag">${g.cinsiyet === 'Erkek' ? '♂' : '♀'} ${g.cinsiyet}</span>`);
+  if (+g.hipertansiyon)    tags.push(`<span class="htag warn">⚡ HT</span>`);
+  if (+g.kalp_hastaligi)   tags.push(`<span class="htag warn">❤️ KH</span>`);
+  if (g.sigara_durumu === 'Halen İçiyor') tags.push(`<span class="htag warn">🚬 Sigara</span>`);
+  if (+g.ortalama_seker >= 126)           tags.push(`<span class="htag warn">🩸 ${g.ortalama_seker} mg/dL</span>`);
+  if (+g.vucut_kitle_indeksi >= 30)       tags.push(`<span class="htag">⚖️ VKİ ${(+g.vucut_kitle_indeksi).toFixed(1)}</span>`);
+  return tags.join('');
+}
+
+function _fmtHistDate(iso) {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString('tr-TR', {day:'2-digit', month:'short', year:'numeric'}) + ' ' +
+           d.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
+  } catch { return iso; }
+}
+
+function _updateHStats(records) {
+  document.getElementById('hsToplam').textContent = records.length;
+  document.getElementById('hsYuksek').textContent = records.filter(r => (r.risk_seviyesi || r.seviye) === 'Yüksek').length;
+  const son = records[0] ? _fmtHistDate(records[0].tahmin_tarihi || records[0].tarih) : '—';
+  const sonEl = document.getElementById('hsSon');
+  sonEl.textContent = son;
+  sonEl.style.fontSize = '.75rem';
+  sonEl.style.webkitTextFillColor = 'var(--t1)';
+}
+
+function showDetail(idx) {
+  const r = _hFiltered[idx]; if (!r) return;
+  const sev = r.risk_seviyesi || r.seviye || '—';
+  const pct = r.risk_yuzdesi !== undefined ? r.risk_yuzdesi : (r.yuzde !== undefined ? r.yuzde : '—');
+  const cls = sev === 'Yüksek' ? 'yuksek' : sev === 'Orta' ? 'orta' : 'dusuk';
+  const g   = r.model_girdileri || r.girdi || {};
+  const tarih = _fmtHistDate(r.tahmin_tarihi || r.tarih);
+
+  document.getElementById('mDetailTitle').innerHTML =
+    `📊 Risk Detayı — <span class="hbadge ${cls}" style="vertical-align:middle">${sev}</span>`;
+
+  const rows = [
+    ['Tarih', tarih],
+    ['Risk Yüzdesi', `<strong class="hpct ${cls}">${typeof pct === 'number' ? pct.toFixed(1) : pct}%</strong>`],
+    ['Risk Seviyesi', sev],
+    ['—', ''],
+    ['Yaş', g.yas || '—'],
+    ['Cinsiyet', g.cinsiyet || '—'],
+    ['Medeni Durum', g.evli_mi || '—'],
+    ['Çalışma Tipi', g.calisma_tipi || '—'],
+    ['İkamet', g.ikamet_tipi || '—'],
+    ['—', ''],
+    ['Hipertansiyon', +g.hipertansiyon ? '✅ Var' : '❌ Yok'],
+    ['Kalp Hastalığı', +g.kalp_hastaligi ? '✅ Var' : '❌ Yok'],
+    ['Sigara', g.sigara_durumu || '—'],
+    ['Ort. Kan Şekeri', g.ortalama_seker ? g.ortalama_seker + ' mg/dL' : '—'],
+    ['Vücut Kitle İndeksi', g.vucut_kitle_indeksi ? (+g.vucut_kitle_indeksi).toFixed(1) + ' kg/m²' : '—'],
+  ].filter(([k]) => k !== '—');
+
+  document.getElementById('mDetailBody').innerHTML =
+    rows.map(([k, v]) => `<div class="drow"><span class="dk">${k}</span><span class="dv">${v}</span></div>`).join('');
+
+  openMod('mDetail');
+}
 
 function clearRForm() {
   ['fYas','fSeker','fBmi'].forEach(i => document.getElementById(i).value = '');

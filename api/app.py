@@ -19,12 +19,13 @@ from model.predict            import hasta_risk_tahmini
 from database.doktor_isimleri import (
     doktor_giris, doktor_kayit,
     doktorlari_listele, doktor_profil_getir,
+    guvenlik_sorusu_getir, sifre_sifirla, sifre_guncelle,
 )
 from database.hasta_isimleri  import (
     hasta_ekle, hastalari_listele, hasta_getir, hasta_ara,
 )
 from database.risk_islemleri  import (
-    hasta_risk_gecmisi, risk_istatistikleri,
+    hasta_risk_gecmisi, risk_istatistikleri, doktor_risk_gecmisi,
 )
 from database.connection import baglanti_olustur
 
@@ -174,6 +175,15 @@ def doktor_ekle_endpoint():
     return jsonify({"hata": mesaj, "durum": "hata"}), kod
 
 
+@app.route("/api/doktorlar/<doktor_id>/risk-gecmisi", methods=["GET"])
+def doktor_risk_gecmisi_endpoint(doktor_id):
+    """Doktora ait tüm risk tahminlerini döndürür."""
+    limit  = int(request.args.get("limit", 100))
+    offset = int(request.args.get("offset", 0))
+    kayitlar = doktor_risk_gecmisi(doktor_id, limit=limit, offset=offset)
+    return jsonify({"kayitlar": _ser(kayitlar), "toplam": len(kayitlar), "durum": "basarili"}), 200
+
+
 @app.route("/api/doktorlar/<tc_no>/profil", methods=["GET"])
 def doktor_profil_endpoint(tc_no):
     """TC numarasıyla doktor profil bilgilerini getirir."""
@@ -181,6 +191,64 @@ def doktor_profil_endpoint(tc_no):
     if not profil:
         return jsonify({"hata": "Doktor bulunamadı", "durum": "hata"}), 404
     return jsonify({"doktor": _ser(profil), "durum": "basarili"}), 200
+
+
+@app.route("/api/doktorlar/sifre-degistir", methods=["POST"])
+def sifre_degistir_endpoint():
+    """
+    Giriş yapmış doktorun şifresini değiştirir.
+    Body: { "tc_no", "eski_sifre", "yeni_sifre", "yeni_sifre_tekrar" }
+    """
+    data = request.json or {}
+    tc   = data.get("tc_no", "").strip()
+    eski = data.get("eski_sifre", "")
+    p1   = data.get("yeni_sifre", "")
+    p2   = data.get("yeni_sifre_tekrar", "")
+    if not tc or not eski or not p1:
+        return jsonify({"hata": "Tüm alanlar zorunludur", "durum": "hata"}), 400
+    sonuc = sifre_guncelle(tc_no=tc, eski_sifre=eski, yeni_sifre=p1, yeni_sifre_tekrar=p2)
+    if sonuc["basarili"]:
+        return jsonify({"mesaj": sonuc["mesaj"], "durum": "basarili"}), 200
+    return jsonify({"hata": sonuc["mesaj"], "durum": "hata"}), 400
+
+
+@app.route("/api/doktorlar/guvenlik-sorusu", methods=["POST"])
+def guvenlik_sorusu_endpoint():
+    """
+    Şifremi unuttum — 1. adım.
+    Body: { "tc_no": "..." }
+    Döner: { "soru": "...", "durum": "basarili" }
+    """
+    data = request.json or {}
+    tc   = data.get("tc_no", "").strip()
+    if not tc:
+        return jsonify({"hata": "TC zorunludur", "durum": "hata"}), 400
+    sonuc = guvenlik_sorusu_getir(tc)
+    if sonuc["basarili"]:
+        return jsonify({"soru": sonuc["soru"], "durum": "basarili"}), 200
+    return jsonify({"hata": sonuc["mesaj"], "durum": "hata"}), 404
+
+
+@app.route("/api/doktorlar/sifre-sifirla", methods=["POST"])
+def sifre_sifirla_endpoint():
+    """
+    Şifremi unuttum — 2. adım.
+    Body: { "tc_no", "guvenlik_cevabi", "yeni_sifre", "yeni_sifre_tekrar" }
+    """
+    data = request.json or {}
+    tc   = data.get("tc_no", "").strip()
+    cev  = data.get("guvenlik_cevabi", "").strip()
+    p1   = data.get("yeni_sifre", "")
+    p2   = data.get("yeni_sifre_tekrar", "")
+    if not tc or not cev or not p1:
+        return jsonify({"hata": "Tüm alanlar zorunludur", "durum": "hata"}), 400
+    sonuc = sifre_sifirla(
+        tc_no=tc, guvenlik_cevabi=cev,
+        yeni_sifre=p1, yeni_sifre_tekrar=p2,
+    )
+    if sonuc["basarili"]:
+        return jsonify({"mesaj": sonuc["mesaj"], "durum": "basarili"}), 200
+    return jsonify({"hata": sonuc["mesaj"], "durum": "hata"}), 400
 
 
 # ════════════════════════════════════════════════════════════════

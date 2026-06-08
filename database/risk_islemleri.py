@@ -170,6 +170,27 @@ def risk_sonucu_kaydet(
 # VERİ OKUMA
 # ════════════════════════════════════════════════════════════════
 
+def doktor_risk_gecmisi(doktor_id: str, limit: int = 100, offset: int = 0) -> list:
+    """
+    Belirtilen doktora ait tüm risk tahminlerini döndürür.
+    En yeniden eskiye sıralı.
+
+    Returns:
+        list: Tahmin kayıtları listesi
+    """
+    db = baglanti_olustur()
+    if db is None:
+        return []
+
+    return list(
+        db.inme_risk_tahminleri
+        .find({"doktor_id": doktor_id}, {"_id": 0})
+        .sort("tahmin_tarihi", -1)
+        .skip(offset)
+        .limit(limit)
+    )
+
+
 def hasta_risk_gecmisi(hasta_id: str, limit: int = 10) -> list:
     """
     Hastanın geçmiş risk tahminlerini en yeniden eskiye sıralar.
