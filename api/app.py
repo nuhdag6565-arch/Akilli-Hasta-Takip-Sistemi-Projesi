@@ -9,11 +9,23 @@ Version  : 3.0
 
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from flask import Flask, jsonify, request
+# Proje kökünü Python yoluna ekle (IDE'den veya api/ içinden çalıştırılsa da çalışır)
+_PROJE_KOKU = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _PROJE_KOKU)
+
+# Windows'ta Türkçe karakter hatasını önle
+if sys.stdout.encoding and sys.stdout.encoding.lower() != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+if sys.stderr.encoding and sys.stderr.encoding.lower() != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+
+from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 from datetime import datetime
+
+# Frontend index.html yolu
+_FRONTEND = os.path.join(_PROJE_KOKU, "frontend", "index.html")
 
 from model.predict            import hasta_risk_tahmini
 from database.doktor_isimleri import (
@@ -325,6 +337,16 @@ def risk_tahmini():
 
 
 # ════════════════════════════════════════════════════════════════
+# FRONTEND — IDE'den çalıştırıldığında tarayıcı http://127.0.0.1:5000
+# adresine gittiğinde index.html doğrudan sunulur.
+# ════════════════════════════════════════════════════════════════
+
+@app.route("/")
+def frontend():
+    return send_file(_FRONTEND)
+
+
+# ════════════════════════════════════════════════════════════════
 # İSTATİSTİK ENDPOINT'İ
 # ════════════════════════════════════════════════════════════════
 
@@ -340,4 +362,14 @@ def istatistikler():
 # ════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    import threading
+    import webbrowser
+    import time
+
+    def _tarayici_ac():
+        time.sleep(1.2)
+        webbrowser.open("http://127.0.0.1:5000")
+
+    threading.Thread(target=_tarayici_ac, daemon=True).start()
+    print("Sistem hazir -> http://127.0.0.1:5000")
+    app.run(debug=True, use_reloader=False)
