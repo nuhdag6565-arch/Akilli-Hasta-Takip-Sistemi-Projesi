@@ -474,28 +474,31 @@ def hasta_risk_tahmini(hasta_verisi: dict) -> dict:
                 "oneri": None, "tahmin_tarihi": None,
             }
 
-        model, encoders, ozellik_adlari = _model_getir()
-        X = _ozellikleri_hazirla(hasta_verisi, encoders, ozellik_adlari)
-
-        # ML olasılığı
-        ml_skoru = float(model.predict_proba(X)[0][1])
-
-        # Klinik skor (Framingham — çarpımsal HR)
+        # Klinik skor (Framingham — çarpımsal HR) — her zaman hesaplanır
         klinik_skoru = _klinik_skor_hesapla(hasta_verisi)
 
-        # Adaptif blend ağırlığı
-        n_rf = sum([
-            int(hasta_verisi.get("hipertansiyon",   0)),
-            int(hasta_verisi.get("kalp_hastaligi",  0)),
-            1 if hasta_verisi.get("sigara_durumu") == "Halen İçiyor" else 0,
-            1 if float(hasta_verisi.get("ortalama_seker",       90)) >= 126 else 0,
-            1 if float(hasta_verisi.get("vucut_kitle_indeksi",  25)) >= 30  else 0,
-        ])
-        # Klinik ağırlık: 0.60 (0 RF) → 0.90 (5 RF)
-        w_klinik = min(0.90, 0.60 + 0.06 * n_rf)
-        w_ml     = 1.0 - w_klinik
+        # ML modeli yüklemeye çalış; yoksa salt klinik skor kullan
+        try:
+            model, encoders, ozellik_adlari = _model_getir()
+            X        = _ozellikleri_hazirla(hasta_verisi, encoders, ozellik_adlari)
+            ml_skoru = float(model.predict_proba(X)[0][1])
 
-        risk_skoru = min(0.95, w_klinik * klinik_skoru + w_ml * ml_skoru)
+            # Adaptif blend ağırlığı
+            n_rf = sum([
+                int(hasta_verisi.get("hipertansiyon",   0)),
+                int(hasta_verisi.get("kalp_hastaligi",  0)),
+                1 if hasta_verisi.get("sigara_durumu") == "Halen İçiyor" else 0,
+                1 if float(hasta_verisi.get("ortalama_seker",       90)) >= 126 else 0,
+                1 if float(hasta_verisi.get("vucut_kitle_indeksi",  25)) >= 30  else 0,
+            ])
+            w_klinik = min(0.90, 0.60 + 0.06 * n_rf)
+            risk_skoru = min(0.95, w_klinik * klinik_skoru + (1.0 - w_klinik) * ml_skoru)
+            kaynak = "Hibrit (Klinik+ML)"
+
+        except (FileNotFoundError, Exception):
+            # Model dosyası yok veya yüklenemedi → sadece klinik skor
+            risk_skoru = klinik_skoru
+            kaynak = "Klinik (Framingham)"
 
         # Klinik minimum eşikler — blend sonrası da uygulanır (ML seyreltmesini önler)
         hiper = int(hasta_verisi.get("hipertansiyon", 0))
@@ -512,7 +515,7 @@ def hasta_risk_tahmini(hasta_verisi: dict) -> dict:
             risk_skoru = max(risk_skoru, 0.25)
         if (hiper or kalp) and sek >= 126:
             risk_skoru = max(risk_skoru, 0.22)
-        risk_skoru    = min(0.95, risk_skoru)
+        risk_skoru = min(0.95, risk_skoru)
 
         risk_seviyesi = _risk_seviyesi_belirle(risk_skoru)
         oneri_dict    = _uzman_oneri_uret(risk_seviyesi, hasta_verisi)
@@ -530,19 +533,12 @@ def hasta_risk_tahmini(hasta_verisi: dict) -> dict:
             "aciliyet"              : oneri_dict["aciliyet"],
             "aciliyet_rengi"        : oneri_dict["aciliyet_rengi"],
             "tahmin_tarihi"         : datetime.now().isoformat(),
-            "mesaj"                 : "Tahmin başarıyla tamamlandı",
+            "mesaj"                 : f"Tahmin başarıyla tamamlandı ({kaynak})",
         }
 
-    except FileNotFoundError as e:
-        return {
-            "basarili": False, "mesaj": str(e),
-            "risk_skoru": None, "risk_yuzdesi": None,
-            "risk_seviyesi": None, "risk_rengi": None,
-            "oneri": None, "tahmin_tarihi": None,
-        }
     except Exception as e:
         return {
-            "basarili": False, "mesaj": f"Model tahmin hatası: {str(e)}",
+            "basarili": False, "mesaj": f"Tahmin hatası: {str(e)}",
             "risk_skoru": None, "risk_yuzdesi": None,
             "risk_seviyesi": None, "risk_rengi": None,
             "oneri": None, "tahmin_tarihi": None,

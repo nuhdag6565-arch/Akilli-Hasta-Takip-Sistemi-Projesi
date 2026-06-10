@@ -225,7 +225,7 @@ ML model risk tahminleri
 **Tasarım Kararları:**
 - **Model Versiyonu**: Farklı model versiyonlarının tahminlerini takip etmek için
 - **Giriş Parametreleri**: Modele girilen tüm parametreler embedded object olarak saklanır (şeffaflık için)
-- **Risk Kategorileri**: "Düşük" (0.0-0.33), "Orta" (0.33-0.66), "Yüksek" (0.66-1.0)
+- **Risk Kategorileri**: "Düşük" (0.0-0.10), "Orta" (0.10-0.30), "Yüksek" (0.30-1.0)
 - **Doktor Onayı**: Tahminlerin doktor tarafından onaylanması için workflow desteği
 
 #### 6. `yasam_tarzi_degisiklikleri` Koleksiyonu

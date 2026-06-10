@@ -165,7 +165,7 @@ SEMA = {
                     },
                     "risk_seviyesi": {
                         "enum": ["Düşük", "Orta", "Yüksek"],
-                        "description": "Düşük<0.33  Orta<0.66  Yüksek≥0.66"
+                        "description": "Düşük<0.10  Orta<0.30  Yüksek≥0.30"
                     },
                     "risk_yuzdesi": {
                         "bsonType": "double",
