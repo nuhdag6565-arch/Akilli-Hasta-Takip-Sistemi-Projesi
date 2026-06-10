@@ -9,11 +9,15 @@ Version  : 3.0
 
 import sys
 import os
+import webbrowser
+import threading
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from datetime import datetime
+
+FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
 
 from model.predict            import hasta_risk_tahmini
 from database.doktor_isimleri import (
@@ -28,7 +32,7 @@ from database.risk_islemleri  import (
 )
 from database.connection import baglanti_olustur
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path="")
 CORS(app)
 
 db = baglanti_olustur()
@@ -47,6 +51,25 @@ def _ser(obj):
     if isinstance(obj, datetime):
         return obj.isoformat()
     return obj
+
+
+# ════════════════════════════════════════════════════════════════
+# SAĞLIK KONTROLÜ
+# ════════════════════════════════════════════════════════════════
+
+@app.route("/", methods=["GET"])
+def index():
+    return send_from_directory(FRONTEND_DIR, "index.html")
+
+
+@app.route("/api", methods=["GET"])
+def saglik_kontrolu():
+    return jsonify({
+        "durum": "basarili",
+        "mesaj": "Akıllı Hasta Takip Sistemi API'si çalışıyor",
+        "versiyon": "3.0",
+        "db_baglantisi": "aktif" if db is not None else "devre dışı",
+    }), 200
 
 
 # ════════════════════════════════════════════════════════════════
@@ -272,4 +295,8 @@ def istatistikler():
 # ════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    PORT = 5000
+    url  = f"http://localhost:{PORT}"
+    threading.Timer(1.2, lambda: webbrowser.open(url)).start()
+    print(f"\n🌐 Uygulama açılıyor: {url}\n")
+    app.run(debug=True, port=PORT, use_reloader=False)
